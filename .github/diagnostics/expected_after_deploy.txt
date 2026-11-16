@@ -1,0 +1,1162 @@
+column app_config.company_id uuid null=NO default=
+column app_config.extra_owner_emails ARRAY null=NO default='{}'::text[]
+column app_config.id boolean null=NO default=true
+column app_config.owner_email text null=NO default=
+column audit_log.actor text null=NO default=''::text
+column audit_log.actor_user uuid null=YES default=
+column audit_log.company_id uuid null=NO default=
+column audit_log.customer_id text null=YES default=
+column audit_log.entity text null=NO default=
+column audit_log.entity_id text null=NO default=
+column audit_log.entity_label text null=NO default=''::text
+column audit_log.field text null=NO default=
+column audit_log.id text null=NO default=
+column audit_log.job_id text null=YES default=
+column audit_log.new_value text null=NO default=''::text
+column audit_log.old_value text null=NO default=''::text
+column audit_log.timestamp text null=NO default=
+column automation_batch_items.batch_id uuid null=NO default=
+column automation_batch_items.company_id uuid null=NO default=
+column automation_batch_items.created_at timestamp with time zone null=NO default=now()
+column automation_batch_items.customer_id text null=NO default=
+column automation_batch_items.customer_name text null=NO default=''::text
+column automation_batch_items.dedupe_key text null=NO default=
+column automation_batch_items.due_day text null=YES default=
+column automation_batch_items.finished_at timestamp with time zone null=YES default=
+column automation_batch_items.id uuid null=NO default=gen_random_uuid()
+column automation_batch_items.rule_kind text null=NO default=
+column automation_batch_items.status text null=NO default='waiting'::text
+column automation_batch_items.target_id text null=NO default=''::text
+column automation_batches.claimed_at timestamp with time zone null=YES default=
+column automation_batches.company_id uuid null=NO default=
+column automation_batches.created_at timestamp with time zone null=NO default=now()
+column automation_batches.decided_at timestamp with time zone null=YES default=
+column automation_batches.decided_by uuid null=YES default=
+column automation_batches.id uuid null=NO default=gen_random_uuid()
+column automation_batches.status text null=NO default='waiting'::text
+column automation_batches.updated_at timestamp with time zone null=NO default=now()
+column automation_runs.blocked integer null=NO default=0
+column automation_runs.company_id uuid null=NO default=
+column automation_runs.failed integer null=NO default=0
+column automation_runs.finished_at timestamp with time zone null=YES default=
+column automation_runs.gmail_ready boolean null=NO default=false
+column automation_runs.id uuid null=NO default=gen_random_uuid()
+column automation_runs.kind text null=NO default='scheduled'::text
+column automation_runs.outcome text null=NO default=''::text
+column automation_runs.sent integer null=NO default=0
+column automation_runs.skipped integer null=NO default=0
+column automation_runs.started_at timestamp with time zone null=NO default=now()
+column automation_runs.switched_on boolean null=NO default=false
+column automation_runs.waiting integer null=NO default=0
+column automation_sends.attempts integer null=NO default=1
+column automation_sends.company_id uuid null=NO default=
+column automation_sends.created_at timestamp with time zone null=NO default=now()
+column automation_sends.customer_id text null=NO default=
+column automation_sends.customer_name text null=NO default=''::text
+column automation_sends.dedupe_key text null=NO default=
+column automation_sends.id uuid null=NO default=gen_random_uuid()
+column automation_sends.message_id text null=YES default=
+column automation_sends.rule_kind text null=NO default=
+column automation_sends.sent_at timestamp with time zone null=YES default=
+column automation_sends.status text null=NO default='sending'::text
+column automation_sends.target_id text null=NO default=''::text
+column automations.company_id uuid null=NO default=
+column automations.description text null=NO default=''::text
+column automations.enabled boolean null=NO default=true
+column automations.id text null=NO default=
+column automations.kind text null=NO default=
+column automations.label text null=NO default=''::text
+column automations.template text null=NO default=''::text
+column automations.timing_days integer null=NO default=0
+column booking_rate_limits.contact_hash text null=YES default=
+column booking_rate_limits.created_at timestamp with time zone null=NO default=now()
+column booking_rate_limits.id bigint null=NO default=
+column booking_rate_limits.ip_hash text null=NO default=
+column booking_requests.address text null=NO default=''::text
+column booking_requests.company_id uuid null=NO default=
+column booking_requests.date date null=NO default=
+column booking_requests.details text null=NO default=''::text
+column booking_requests.email text null=YES default=
+column booking_requests.estimate_id text null=YES default=
+column booking_requests.id text null=NO default=
+column booking_requests.name text null=NO default=''::text
+column booking_requests.phone text null=NO default=''::text
+column booking_requests.requested_at date null=NO default=
+column booking_requests.status text null=NO default='pending'::text
+column chemical_records.applicator text null=NO default=''::text
+column chemical_records.company_id uuid null=NO default=
+column chemical_records.date text null=NO default=
+column chemical_records.id text null=NO default=
+column chemical_records.notes text null=NO default=''::text
+column chemical_records.product text null=NO default=''::text
+column chemical_records.program_id text null=NO default=
+column chemical_records.rate text null=NO default=''::text
+column closed_days.company_id uuid null=NO default=
+column closed_days.created_by text null=YES default=
+column closed_days.id text null=NO default=
+column closed_days.reason text null=YES default=
+column companies.created_at timestamp with time zone null=NO default=now()
+column companies.id uuid null=NO default=gen_random_uuid()
+column companies.name text null=NO default=
+column company_document_files.company_id uuid null=NO default=
+column company_document_files.created_at timestamp with time zone null=NO default=now()
+column company_document_files.data_base64 text null=NO default=
+column company_document_files.file_name text null=NO default=''::text
+column company_document_files.id text null=NO default=
+column company_document_files.mime_type text null=NO default=
+column company_document_files.size_bytes integer null=NO default=
+column company_documents.company_id uuid null=NO default=
+column company_documents.created_at timestamp with time zone null=NO default=now()
+column company_documents.crew_id text null=YES default=
+column company_documents.expiry_date date null=YES default=
+column company_documents.file_id text null=YES default=
+column company_documents.file_name text null=NO default=''::text
+column company_documents.id text null=NO default=
+column company_documents.issuer text null=NO default=''::text
+column company_documents.kind text null=NO default='other'::text
+column company_documents.name text null=NO default=''::text
+column company_documents.notes text null=NO default=''::text
+column company_documents.start_date date null=YES default=
+column company_members.company_id uuid null=NO default=
+column company_members.role text null=NO default='crew'::text
+column company_members.user_id uuid null=NO default=
+column company_public.company_id uuid null=YES default=
+column company_public.name text null=YES default=
+column company_public.phone text null=YES default=
+column crew.app_role text null=NO default='crew'::text
+column crew.auth_user_id uuid null=YES default=
+column crew.available_weekdays ARRAY null=YES default=
+column crew.can_drive_equipment ARRAY null=YES default=
+column crew.cdl_class text null=NO default='none'::text
+column crew.color text null=NO default=''::text
+column crew.company_id uuid null=NO default=
+column crew.company_insured boolean null=NO default=false
+column crew.counted_on_every_job boolean null=NO default=false
+column crew.driver_licensed boolean null=NO default=false
+column crew.email text null=NO default=''::text
+column crew.employment_type text null=YES default=
+column crew.fixed_weekly_hours numeric null=YES default=
+column crew.id text null=NO default=
+column crew.last_resort boolean null=NO default=false
+column crew.message_intro text null=NO default=''::text
+column crew.name text null=NO default=''::text
+column crew.own_truck_id text null=YES default=
+column crew.pay_amount numeric null=YES default=
+column crew.pay_type text null=YES default=
+column crew.permissions jsonb null=YES default=
+column crew.phone text null=NO default=''::text
+column crew.prefers_own_truck boolean null=NO default=false
+column crew.role text null=NO default=''::text
+column crew.skills ARRAY null=NO default='{}'::text[]
+column crew.status text null=NO default='active'::text
+column crew.works_well_with ARRAY null=YES default=
+column crew_locations.company_id uuid null=NO default=
+column crew_locations.crew_id text null=NO default=
+column crew_locations.id text null=NO default=
+column crew_locations.job_id text null=YES default=
+column crew_locations.lat double precision null=NO default=
+column crew_locations.lng double precision null=NO default=
+column crew_locations.recorded_at text null=NO default=
+column crew_locations.request_id text null=YES default=
+column crew_unavailability.company_id uuid null=NO default=
+column crew_unavailability.crew_id text null=NO default=
+column crew_unavailability.end_date text null=NO default=
+column crew_unavailability.id text null=NO default=
+column crew_unavailability.start_date text null=NO default=
+column customer_addresses.city text null=NO default=''::text
+column customer_addresses.company_id uuid null=NO default=
+column customer_addresses.customer_id text null=NO default=
+column customer_addresses.id text null=NO default=
+column customer_addresses.is_primary boolean null=NO default=false
+column customer_addresses.label text null=NO default=''::text
+column customer_addresses.state text null=NO default='CO'::text
+column customer_addresses.street text null=NO default=''::text
+column customer_addresses.zip text null=NO default=''::text
+column customer_edit_requests.applied_changes jsonb null=YES default=
+column customer_edit_requests.changes jsonb null=NO default=
+column customer_edit_requests.company_id uuid null=NO default=
+column customer_edit_requests.created_at timestamp with time zone null=NO default=now()
+column customer_edit_requests.customer_id text null=NO default=
+column customer_edit_requests.decided_at timestamp with time zone null=YES default=
+column customer_edit_requests.decided_by text null=YES default=
+column customer_edit_requests.decided_user uuid null=YES default=
+column customer_edit_requests.decline_reason text null=NO default=''::text
+column customer_edit_requests.id uuid null=NO default=gen_random_uuid()
+column customer_edit_requests.note text null=NO default=''::text
+column customer_edit_requests.requested_by text null=YES default=
+column customer_edit_requests.requested_name text null=NO default=''::text
+column customer_edit_requests.requested_user uuid null=YES default=
+column customer_edit_requests.status text null=NO default='pending'::text
+column customers.address text null=NO default=''::text
+column customers.billing_terms text null=YES default=
+column customers.boundary jsonb null=YES default=
+column customers.city text null=NO default=''::text
+column customers.company text null=NO default=''::text
+column customers.company_id uuid null=NO default=
+column customers.company_name text null=YES default=
+column customers.contacts jsonb null=NO default='[]'::jsonb
+column customers.contract_number text null=YES default=
+column customers.customer_type text null=NO default='residential'::text
+column customers.email text null=NO default=''::text
+column customers.first_name text null=NO default=''::text
+column customers.gate_code text null=NO default=''::text
+column customers.id text null=NO default=
+column customers.job_site_address text null=YES default=
+column customers.last_name text null=NO default=''::text
+column customers.map_lat double precision null=YES default=
+column customers.map_lng double precision null=YES default=
+column customers.no_auto_emails boolean null=NO default=false
+column customers.notes text null=NO default=''::text
+column customers.phone text null=NO default=''::text
+column customers.po_number text null=YES default=
+column customers.project_name text null=YES default=
+column customers.project_number text null=YES default=
+column customers.property_notes text null=NO default=''::text
+column customers.zip text null=NO default=''::text
+column day_crews.company_id uuid null=NO default=
+column day_crews.date text null=NO default=
+column day_crews.id text null=NO default=
+column day_crews.member_ids ARRAY null=NO default='{}'::text[]
+column day_crews.name text null=NO default='Crew 1'::text
+column email_threads.company_id uuid null=NO default=
+column email_threads.created_at text null=NO default=
+column email_threads.customer_id text null=NO default=
+column email_threads.id text null=NO default=
+column equipment.company_id uuid null=NO default=
+column equipment.details text null=NO default=''::text
+column equipment.down boolean null=YES default=
+column equipment.home_site text null=YES default=
+column equipment.id text null=NO default=
+column equipment.kind text null=NO default='Other'::text
+column equipment.name text null=NO default=''::text
+column equipment.seats integer null=YES default=
+column equipment.status text null=NO default='available'::text
+column equipment.tows ARRAY null=YES default=
+column equipment.weekly_driver_limit integer null=YES default=
+column equipment.weight_lbs integer null=YES default=
+column equipment_notes.author_id text null=NO default=''::text
+column equipment_notes.author_name text null=NO default=''::text
+column equipment_notes.company_id uuid null=NO default=
+column equipment_notes.created_at timestamp with time zone null=NO default=now()
+column equipment_notes.equipment_id text null=NO default=
+column equipment_notes.id text null=NO default=
+column equipment_notes.text text null=NO default=''::text
+column equipment_problem_photos.company_id uuid null=NO default=
+column equipment_problem_photos.created_at timestamp with time zone null=NO default=now()
+column equipment_problem_photos.data_base64 text null=NO default=
+column equipment_problem_photos.mime_type text null=NO default=
+column equipment_problem_photos.problem_id uuid null=NO default=
+column equipment_problem_photos.size_bytes integer null=NO default=
+column equipment_problems.company_id uuid null=NO default=
+column equipment_problems.created_at timestamp with time zone null=NO default=now()
+column equipment_problems.equipment_id text null=NO default=
+column equipment_problems.has_photo boolean null=NO default=false
+column equipment_problems.id uuid null=NO default=gen_random_uuid()
+column equipment_problems.note text null=NO default=
+column equipment_problems.reported_by text null=YES default=
+column equipment_problems.reported_name text null=NO default=''::text
+column equipment_problems.reported_user uuid null=YES default=
+column equipment_problems.status text null=NO default='open'::text
+column equipment_problems.status_at timestamp with time zone null=YES default=
+column equipment_problems.status_by_name text null=YES default=
+column estimate_accept_links.accepted_at timestamp with time zone null=YES default=
+column estimate_accept_links.accepted_name text null=YES default=
+column estimate_accept_links.accepted_option_id text null=YES default=
+column estimate_accept_links.company_id uuid null=NO default=
+column estimate_accept_links.content_hash text null=NO default=
+column estimate_accept_links.created_at timestamp with time zone null=NO default=now()
+column estimate_accept_links.estimate_id text null=NO default=
+column estimate_accept_links.expires_at timestamp with time zone null=NO default=(now() + '60 days'::interval)
+column estimate_accept_links.first_viewed_at timestamp with time zone null=YES default=
+column estimate_accept_links.id uuid null=NO default=gen_random_uuid()
+column estimate_accept_links.revoked_at timestamp with time zone null=YES default=
+column estimate_accept_links.revoked_reason text null=YES default=
+column estimate_accept_links.token_hash text null=NO default=
+column estimates.accepted_at text null=YES default=
+column estimates.accepted_by text null=YES default=
+column estimates.accepted_option_id text null=YES default=
+column estimates.company_id uuid null=NO default=
+column estimates.created_by_crew_id text null=YES default=
+column estimates.created_date text null=NO default=
+column estimates.customer_id text null=NO default=
+column estimates.discount_type text null=NO default='none'::text
+column estimates.discount_value numeric null=NO default=0
+column estimates.email_queued_at text null=YES default=
+column estimates.equipment_ids ARRAY null=YES default=
+column estimates.expected_climbers integer null=YES default=
+column estimates.expected_crew integer null=YES default=
+column estimates.expected_crew_ids ARRAY null=YES default=
+column estimates.expected_groundsmen integer null=YES default=
+column estimates.id text null=NO default=
+column estimates.job_id text null=YES default=
+column estimates.lines jsonb null=NO default='[]'::jsonb
+column estimates.notes text null=NO default=''::text
+column estimates.options jsonb null=YES default=
+column estimates.status text null=NO default=
+column estimates.tax_rate numeric null=NO default=0
+column estimates.title text null=NO default=''::text
+column estimates.visit_date text null=YES default=
+column estimates.visit_time text null=YES default=
+column gps_pings.company_id uuid null=NO default=
+column gps_pings.crew_id text null=NO default=
+column gps_pings.id uuid null=NO default=gen_random_uuid()
+column gps_pings.job_id text null=NO default=
+column gps_pings.lat double precision null=NO default=
+column gps_pings.lng double precision null=NO default=
+column gps_pings.recorded_at timestamp with time zone null=NO default=now()
+column invoice_reviews.company_id uuid null=NO default=
+column invoice_reviews.created_at timestamp with time zone null=NO default=now()
+column invoice_reviews.customer_id text null=NO default=''::text
+column invoice_reviews.id uuid null=NO default=gen_random_uuid()
+column invoice_reviews.job_id text null=NO default=
+column invoice_reviews.reason text null=NO default=
+column invoices.auto_created boolean null=NO default=false
+column invoices.auto_send_at timestamp with time zone null=YES default=
+column invoices.auto_send_claimed_at timestamp with time zone null=YES default=
+column invoices.auto_send_note text null=YES default=
+column invoices.auto_send_status text null=YES default=
+column invoices.auto_sent_at timestamp with time zone null=YES default=
+column invoices.auto_undo_until timestamp with time zone null=YES default=
+column invoices.company_id uuid null=NO default=
+column invoices.customer_id text null=NO default=
+column invoices.discount_type text null=NO default='none'::text
+column invoices.discount_value numeric null=NO default=0
+column invoices.due_date text null=NO default=
+column invoices.email_queued_at text null=YES default=
+column invoices.emailed_at timestamp with time zone null=YES default=
+column invoices.estimate_id text null=YES default=
+column invoices.id text null=NO default=
+column invoices.issued_date text null=NO default=
+column invoices.job_id text null=YES default=
+column invoices.lines jsonb null=NO default='[]'::jsonb
+column invoices.number text null=NO default=
+column invoices.paid_date text null=YES default=
+column invoices.payment_method text null=YES default=
+column invoices.splits jsonb null=NO default='[]'::jsonb
+column invoices.status text null=NO default=
+column invoices.tax_rate numeric null=NO default=0
+column job_price_changes.by_office boolean null=NO default=false
+column job_price_changes.changed_at timestamp with time zone null=NO default=now()
+column job_price_changes.changed_by text null=YES default=
+column job_price_changes.changed_by_name text null=NO default=''::text
+column job_price_changes.changed_user uuid null=YES default=
+column job_price_changes.company_id uuid null=NO default=
+column job_price_changes.id uuid null=NO default=gen_random_uuid()
+column job_price_changes.job_id text null=NO default=
+column job_price_changes.new_billing_type text null=YES default=
+column job_price_changes.new_hourly_rate numeric null=YES default=
+column job_price_changes.new_value numeric null=YES default=
+column job_price_changes.old_billing_type text null=YES default=
+column job_price_changes.old_hourly_rate numeric null=YES default=
+column job_price_changes.old_value numeric null=YES default=
+column job_price_changes.reason text null=NO default=''::text
+column job_price_changes.seen_at timestamp with time zone null=YES default=
+column job_price_changes.seen_by text null=YES default=
+column job_price_changes.seen_user uuid null=YES default=
+column jobs.address_id text null=YES default=
+column jobs.billing_type text null=YES default=
+column jobs.company_id uuid null=NO default=
+column jobs.crew_arrivals jsonb null=YES default=
+column jobs.crew_ids ARRAY null=NO default='{}'::text[]
+column jobs.customer_id text null=NO default=
+column jobs.customer_notes text null=NO default=''::text
+column jobs.date text null=NO default=
+column jobs.end_date text null=YES default=
+column jobs.equipment_drivers jsonb null=YES default=
+column jobs.equipment_ids ARRAY null=NO default='{}'::text[]
+column jobs.estimate_id text null=YES default=
+column jobs.estimated_hours numeric null=YES default=
+column jobs.expected_crew integer null=YES default=
+column jobs.hourly_rate numeric null=YES default=
+column jobs.id text null=NO default=
+column jobs.invoice_id text null=YES default=
+column jobs.labor_rate numeric null=YES default=
+column jobs.lat double precision null=YES default=
+column jobs.lng double precision null=YES default=
+column jobs.materials_cost numeric null=YES default=
+column jobs.notes text null=NO default=''::text
+column jobs.office_notes text null=NO default=''::text
+column jobs.other_cost numeric null=YES default=
+column jobs.prune_class text null=YES default=
+column jobs.recurring text null=YES default=
+column jobs.recurring_until text null=YES default=
+column jobs.replaced_price numeric null=YES default=
+column jobs.service_type text null=NO default=
+column jobs.start_time text null=NO default=''::text
+column jobs.status text null=NO default=
+column jobs.team_notes text null=NO default=''::text
+column jobs.time_promised boolean null=NO default=false
+column jobs.title text null=NO default=''::text
+column jobs.tree_ids ARRAY null=NO default='{}'::text[]
+column jobs.value numeric null=YES default=
+column location_requests.company_id uuid null=NO default=
+column location_requests.id text null=NO default=
+column location_requests.requested_at text null=NO default=
+column location_requests.requested_by text null=NO default=
+column location_requests.target_crew_id text null=YES default=
+column maintenance_records.company_id uuid null=NO default=
+column maintenance_records.date date null=NO default=
+column maintenance_records.done_by text null=YES default=
+column maintenance_records.hours numeric null=YES default=
+column maintenance_records.id text null=NO default=
+column maintenance_records.notes text null=NO default=''::text
+column maintenance_records.task_id text null=NO default=
+column maintenance_tasks.company_id uuid null=NO default=
+column maintenance_tasks.equipment_id text null=NO default=
+column maintenance_tasks.id text null=NO default=
+column maintenance_tasks.interval_days integer null=NO default=90
+column maintenance_tasks.name text null=NO default=''::text
+column messages.automatic boolean null=NO default=false
+column messages.body text null=NO default=''::text
+column messages.channel text null=NO default=
+column messages.company_id uuid null=NO default=
+column messages.created_at text null=NO default=
+column messages.customer_id text null=NO default=
+column messages.direction text null=NO default=
+column messages.estimate_id text null=YES default=
+column messages.from_number text null=YES default=
+column messages.id text null=NO default=
+column messages.job_id text null=YES default=
+column messages.sender_crew_id text null=NO default=''::text
+column messages.sender_name text null=NO default=''::text
+column messages.thread_id text null=YES default=
+column phc_programs.company_id uuid null=NO default=
+column phc_programs.customer_id text null=NO default=
+column phc_programs.id text null=NO default=
+column phc_programs.name text null=NO default=''::text
+column phc_programs.notes text null=NO default=''::text
+column phc_programs.renewal_date text null=NO default=
+column phc_programs.start_date text null=NO default=
+column phc_programs.status text null=NO default='active'::text
+column phc_programs.tree_id text null=YES default=
+column phc_programs.type text null=NO default='Other'::text
+column phc_programs.visit_interval_months integer null=NO default=6
+column phc_visits.company_id uuid null=NO default=
+column phc_visits.date text null=NO default=
+column phc_visits.id text null=NO default=
+column phc_visits.notes text null=NO default=''::text
+column phc_visits.program_id text null=NO default=
+column phc_visits.status text null=NO default='scheduled'::text
+column private_notes.author text null=NO default=''::text
+column private_notes.author_user uuid null=YES default=
+column private_notes.company_id uuid null=NO default=
+column private_notes.created_at text null=NO default=
+column private_notes.customer_id text null=NO default=
+column private_notes.id text null=NO default=
+column private_notes.kind text null=NO default=
+column private_notes.text text null=NO default=''::text
+column public_rate_limits.bucket text null=NO default=
+column public_rate_limits.created_at timestamp with time zone null=NO default=now()
+column public_rate_limits.id bigint null=NO default=
+column public_rate_limits.key_hash text null=NO default=
+column settings.auto_clock boolean null=NO default=false
+column settings.auto_emails boolean null=NO default=false
+column settings.auto_emails_since text null=YES default=
+column settings.commercial_terms_days integer null=NO default=30
+column settings.company_id uuid null=NO default=
+column settings.company_profile jsonb null=YES default=
+column settings.crew_rules jsonb null=YES default=
+column settings.daily_target numeric null=NO default=0
+column settings.hover_route boolean null=NO default=true
+column settings.planner jsonb null=YES default=
+column settings.residential_terms_days integer null=NO default=0
+column settings.show_day_totals boolean null=NO default=true
+column settings.suggest_days boolean null=NO default=true
+column settings.suggest_max_miles numeric null=NO default=5
+column settings.suggest_max_minutes integer null=NO default=30
+column settings.suggest_max_over numeric null=NO default=0
+column settings.suggest_skip_holidays boolean null=NO default=true
+column settings.suggest_skip_weekends boolean null=NO default=true
+column time_off_requests.company_id uuid null=NO default=
+column time_off_requests.crew_id text null=NO default=
+column time_off_requests.decided_at text null=YES default=
+column time_off_requests.decided_by text null=YES default=
+column time_off_requests.end_date text null=NO default=
+column time_off_requests.id text null=NO default=
+column time_off_requests.reason text null=NO default=''::text
+column time_off_requests.requested_at text null=NO default=
+column time_off_requests.start_date text null=NO default=
+column time_off_requests.status text null=NO default='pending'::text
+column timesheet_week_approvals.approved_at timestamp with time zone null=NO default=now()
+column timesheet_week_approvals.approved_by text null=NO default=''::text
+column timesheet_week_approvals.approved_user uuid null=YES default=
+column timesheet_week_approvals.company_id uuid null=NO default=
+column timesheet_week_approvals.total_hours numeric null=NO default=0
+column timesheet_week_approvals.week_start date null=NO default=
+column timesheets.auto_closed boolean null=NO default=false
+column timesheets.clock_in text null=YES default=
+column timesheets.clock_out text null=YES default=
+column timesheets.company_id uuid null=NO default=
+column timesheets.crew_id text null=NO default=
+column timesheets.date text null=NO default=
+column timesheets.hours numeric null=YES default=
+column timesheets.id text null=NO default=
+column timesheets.job_id text null=YES default=
+column timesheets.location text null=NO default=''::text
+column timesheets.notes text null=NO default=''::text
+column trees.company_id uuid null=NO default=
+column trees.condition text null=NO default='Good'::text
+column trees.condition_history jsonb null=NO default='[]'::jsonb
+column trees.customer_id text null=NO default=
+column trees.dbh text null=NO default=''::text
+column trees.dbh_history jsonb null=NO default='[]'::jsonb
+column trees.height text null=NO default=''::text
+column trees.id text null=NO default=
+column trees.label text null=NO default=''::text
+column trees.lat double precision null=NO default=
+column trees.lng double precision null=NO default=
+column trees.next_inspection_date text null=YES default=
+column trees.notes text null=NO default=''::text
+column trees.photos jsonb null=NO default='[]'::jsonb
+column trees.risk_notes text null=NO default=''::text
+column trees.risk_rating text null=NO default=''::text
+column trees.site_id text null=YES default=
+column trees.source text null=NO default='manual'::text
+column trees.species text null=NO default=''::text
+column trees.status text null=NO default=''::text
+constraint app_config app_config_company_id_fkey 829b1985e4a1ecefe320e0d52f439da8
+constraint app_config app_config_id_check cddd5f1abfdea207f35d375bbadc5064
+constraint app_config app_config_owner_email_check aa9a8a7352fed2d7ccc98eb9512fe72b
+constraint app_config app_config_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint audit_log audit_log_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint audit_log audit_log_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint automation_batch_items automation_batch_items_batch_id_fkey 3206d9a463b4382077999817b73d1bda
+constraint automation_batch_items automation_batch_items_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint automation_batch_items automation_batch_items_customer_name_check 5c5f7c940992e64d3f9c7655c2aed6ad
+constraint automation_batch_items automation_batch_items_dedupe_key_check 67586babdbb82e7db4cbfae9e21560b0
+constraint automation_batch_items automation_batch_items_due_day_check e7b13cd676f7030e665412ec7d05fb9e
+constraint automation_batch_items automation_batch_items_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint automation_batch_items automation_batch_items_rule_kind_check 36885de4e6f6d608b1800db377b6d8d4
+constraint automation_batch_items automation_batch_items_status_check e4ae3dd6cbd880ac62aa38aa2c24aa78
+constraint automation_batches automation_batches_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint automation_batches automation_batches_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint automation_batches automation_batches_status_check 01c3ad6cc10e68a047960374a7ee561f
+constraint automation_runs automation_runs_blocked_check 9c3a09def20ebdf73e73203a27a3c5a3
+constraint automation_runs automation_runs_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint automation_runs automation_runs_kind_check 64d3dee3491f36566afc10c23aabae2b
+constraint automation_runs automation_runs_outcome_check aa0d9d3ec9f5f90453f6a335b82c8afb
+constraint automation_runs automation_runs_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint automation_sends automation_sends_company_id_dedupe_key_key be4ebf3ad6ba226b013dc94246303110
+constraint automation_sends automation_sends_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint automation_sends automation_sends_customer_name_check 5c5f7c940992e64d3f9c7655c2aed6ad
+constraint automation_sends automation_sends_dedupe_key_check 67586babdbb82e7db4cbfae9e21560b0
+constraint automation_sends automation_sends_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint automation_sends automation_sends_rule_kind_check 73ee5e1dd78b4bb1e017fc2359c09c32
+constraint automation_sends automation_sends_status_check d021da8fde19f6fa13d488b860947a16
+constraint automations automations_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint automations automations_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint booking_rate_limits booking_rate_limits_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint booking_requests booking_requests_address_len 034012ff253dbc0ebbb16d79d4a2865f
+constraint booking_requests booking_requests_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint booking_requests booking_requests_details_len 531615ef6ba9771b0f436d868171e89d
+constraint booking_requests booking_requests_email_len ee3f7fdc98faf5c8464ad7216fb2ad7c
+constraint booking_requests booking_requests_name_len c5f1d448102328bb7a51775af580de7c
+constraint booking_requests booking_requests_phone_len ac8b6818a191a9f049b280a8b815eee7
+constraint booking_requests booking_requests_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint chemical_records chemical_records_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint chemical_records chemical_records_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint closed_days closed_days_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint closed_days closed_days_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint companies companies_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint company_document_files company_document_files_base64 f1c89e5cdfc028d9e8251fb4b10edbbe
+constraint company_document_files company_document_files_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint company_document_files company_document_files_company_id_id_key fd99878012c999ccec079e45a0e75c90
+constraint company_document_files company_document_files_file_name_check 3c853781e80f1cb84af9b1c0d36bf156
+constraint company_document_files company_document_files_mime_type_check 3a966bdc70d313a7c790a6e639469045
+constraint company_document_files company_document_files_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint company_document_files company_document_files_size_bytes_check 4f52ba2402048ded0d0b36f5933c7d22
+constraint company_document_files company_document_files_size_matches 2b9735d8ed921a139aa328f469f6780e
+constraint company_document_files company_document_files_type_matches 58e5cca9f1609afdd3be57b192564f54
+constraint company_documents company_documents_check a118be7fb03094e7f63b80d1cc214349
+constraint company_documents company_documents_company_id_file_id_fkey 855fe6707d7ecd6ecf27dcd8858b8646
+constraint company_documents company_documents_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint company_documents company_documents_crew_id_check 593e7fe92427c2756d4e6f4505e4fe76
+constraint company_documents company_documents_file_name_check 3c853781e80f1cb84af9b1c0d36bf156
+constraint company_documents company_documents_issuer_check 80da07a70be60b95cb4c78b7e8f93946
+constraint company_documents company_documents_kind_check 33e8975801f12d29baf153de2e8187e7
+constraint company_documents company_documents_name_check 882a09bc9a5504c4530865c6b44d4f2b
+constraint company_documents company_documents_notes_check 82432bc4da2a13f921841b7b750a6050
+constraint company_documents company_documents_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint company_members company_members_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint company_members company_members_pkey 5a990819c757a4cfbd10436799018d41
+constraint company_members company_members_user_id_fkey 85d8b2f5f0c0f6b4dcb854efb61a8cb1
+constraint crew crew_auth_user_id_fkey f91277b3e8169a1b117532ba0a21d069
+constraint crew crew_cdl_class_check df35a0925992174d194d1644a7604026
+constraint crew crew_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint crew crew_fixed_weekly_hours_range a93c82349a9f96fe0a770af0732999f7
+constraint crew crew_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint crew_locations crew_locations_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint crew_locations crew_locations_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint crew_unavailability crew_unavailability_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint crew_unavailability crew_unavailability_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint customer_addresses customer_addresses_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint customer_addresses customer_addresses_customer_id_fkey e4ee868f8610b4ab5e459e3bbb465f49
+constraint customer_addresses customer_addresses_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint customer_edit_requests customer_edit_requests_applied_changes_check ea30afbea4fcfcc9044397d0b6794054
+constraint customer_edit_requests customer_edit_requests_applied_only_approved fd180ddbf81241559b2db01ace551bc9
+constraint customer_edit_requests customer_edit_requests_changes_check 11612fea725faaaa7e8d572e3dba5007
+constraint customer_edit_requests customer_edit_requests_check ae62d29ecbd20959633b89c7cc48e963
+constraint customer_edit_requests customer_edit_requests_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint customer_edit_requests customer_edit_requests_customer_id_fkey e4ee868f8610b4ab5e459e3bbb465f49
+constraint customer_edit_requests customer_edit_requests_decline_reason_check 9e672d3960f6282db48597f6de01eed0
+constraint customer_edit_requests customer_edit_requests_note_check 5c2162e3d8ba501b8d5447abd6d5750c
+constraint customer_edit_requests customer_edit_requests_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint customer_edit_requests customer_edit_requests_reason_only_declined 1e7c66f8b36503cc333272ee28f97c38
+constraint customer_edit_requests customer_edit_requests_status_check 4d3632c62527b13cad20716ade893fa7
+constraint customers customers_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint customers customers_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint day_crews day_crews_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint day_crews day_crews_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint email_threads email_threads_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint email_threads email_threads_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint equipment equipment_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint equipment equipment_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint equipment equipment_seats_check cc59d0ce6f24fee937859a2a831c9830
+constraint equipment equipment_weekly_driver_limit_check ef1c63693a6da83b12089bd647a8582e
+constraint equipment equipment_weight_lbs_check 68e78b02055ae7d9bbfa1c7860d032ea
+constraint equipment_notes equipment_notes_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint equipment_notes equipment_notes_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint equipment_problem_photos equipment_problem_photos_base64 f1c89e5cdfc028d9e8251fb4b10edbbe
+constraint equipment_problem_photos equipment_problem_photos_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint equipment_problem_photos equipment_problem_photos_company_id_problem_id_fkey f106afb318754b09262b389c21b28335
+constraint equipment_problem_photos equipment_problem_photos_mime_type_check 2a1b2227d54b6f35d186a892cae29980
+constraint equipment_problem_photos equipment_problem_photos_pkey 4b48e042790c5615ce3a57ded255b130
+constraint equipment_problem_photos equipment_problem_photos_size_bytes_check c277ade9118595b4c53b4e68159345b1
+constraint equipment_problem_photos equipment_problem_photos_size_matches 2b9735d8ed921a139aa328f469f6780e
+constraint equipment_problem_photos equipment_problem_photos_type_matches 2f1eb778c6c40199373369a00d90cee6
+constraint equipment_problems equipment_problems_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint equipment_problems equipment_problems_company_id_id_key fd99878012c999ccec079e45a0e75c90
+constraint equipment_problems equipment_problems_equipment_id_fkey b598e75e5d1f38e927a07baea42dbb1a
+constraint equipment_problems equipment_problems_note_check a296e5f3cba8a035003102673770d2db
+constraint equipment_problems equipment_problems_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint equipment_problems equipment_problems_status_check 8247284fdc1ccc0835a8f4b4ec158af1
+constraint estimate_accept_links estimate_accept_links_accepted_name_check 2402e975aec65bcabd9a75291f79d8ce
+constraint estimate_accept_links estimate_accept_links_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint estimate_accept_links estimate_accept_links_estimate_id_fkey 3cce1e3f1cbf561bcf498b5edb0b7f4f
+constraint estimate_accept_links estimate_accept_links_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint estimate_accept_links estimate_accept_links_revoked_reason_check b87488e1b08df2a201d494af66726c90
+constraint estimate_accept_links estimate_accept_links_token_hash_check 61f22fd9526d8c93a6f6c31a6350d06a
+constraint estimate_accept_links estimate_accept_links_token_hash_key 0f830df04bb663b6de1300c0f33de671
+constraint estimates estimates_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint estimates estimates_equipment_ids_size 95d520fa3551acff777bc519230b8081
+constraint estimates estimates_expected_climbers_range 6db0167b3fd3cf5ffcac3ce39078dba6
+constraint estimates estimates_expected_crew_ids_size 8be8c26fb2950d52281a603f7d0e000e
+constraint estimates estimates_expected_groundsmen_range 7ee8dcd7848937213986bf2c918933c8
+constraint estimates estimates_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint gps_pings gps_pings_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint gps_pings gps_pings_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint invoice_reviews invoice_reviews_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint invoice_reviews invoice_reviews_company_id_job_id_key 5788100c0b3370530eca241119fcc67b
+constraint invoice_reviews invoice_reviews_job_id_fkey 3363fb35cd81816b8a54f0c41e132aa1
+constraint invoice_reviews invoice_reviews_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint invoice_reviews invoice_reviews_reason_check 84cabcade08d3c6d1fc38f976033bd68
+constraint invoices invoices_auto_send_note_check 0aaa29ea43807637e70130e5f7b505a3
+constraint invoices invoices_auto_send_status_check c01b70196aac07ea5b94d964a7a4d9fd
+constraint invoices invoices_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint invoices invoices_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint job_price_changes job_price_changes_check 2e3bf6ee6f94ef1865ab015534da97a9
+constraint job_price_changes job_price_changes_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint job_price_changes job_price_changes_job_id_fkey 3363fb35cd81816b8a54f0c41e132aa1
+constraint job_price_changes job_price_changes_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint jobs jobs_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint jobs jobs_crew_arrivals_is_object 435c52ed490decac162ea12b4315669e
+constraint jobs jobs_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint location_requests location_requests_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint location_requests location_requests_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint maintenance_records maintenance_records_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint maintenance_records maintenance_records_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint maintenance_records maintenance_records_task_id_fkey 1a6c3a3736221de10b3b1d9ac7d818c8
+constraint maintenance_tasks maintenance_tasks_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint maintenance_tasks maintenance_tasks_equipment_id_fkey b598e75e5d1f38e927a07baea42dbb1a
+constraint maintenance_tasks maintenance_tasks_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint messages messages_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint messages messages_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint phc_programs phc_programs_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint phc_programs phc_programs_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint phc_visits phc_visits_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint phc_visits phc_visits_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint private_notes private_notes_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint private_notes private_notes_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint public_rate_limits public_rate_limits_bucket_check b539b037568684324d83ed8ba87417d2
+constraint public_rate_limits public_rate_limits_key_hash_check 05ca1adf05c5ec7bd4fd7b73999f32c4
+constraint public_rate_limits public_rate_limits_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint settings settings_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint settings settings_pkey 8c7bb1129276d4f785394d684102d35e
+constraint time_off_requests time_off_requests_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint time_off_requests time_off_requests_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint timesheet_week_approvals timesheet_week_approvals_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint timesheet_week_approvals timesheet_week_approvals_pkey 45873e1ec959890d66ced159fbd0a592
+constraint timesheet_week_approvals timesheet_week_approvals_total_hours_check d49f2e2dfd97dd751e9e48e62f85b10c
+constraint timesheet_week_approvals timesheet_week_approvals_week_start_check ee3a04d421c09e5a36558123adf7a4eb
+constraint timesheets timesheets_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint timesheets timesheets_pkey 4c6419b3704337bbfe50f018842a9ad3
+constraint trees trees_company_id_fkey 328812a102e31a76daec694eff6a78d7
+constraint trees trees_pkey 4c6419b3704337bbfe50f018842a9ad3
+function accept_estimate_by_link(p_token_hash text, p_option_id text, p_name text) eb4d80a1fbd198b810add6c4e5e5c6e5 secdef=false
+function app_jobs(p_company_id uuid) 318f2c24a58eea749ef561b0201e2aa9 secdef=true
+function approve_customer_edit(p_request_id uuid, p_changes jsonb) 2e3c1a6a2ced1d30ede925eb9a3d433f secdef=true
+function approve_timesheet_week(p_company uuid, p_week date, p_hours numeric) 58f7f541e4221d8d0b8783a5c66a64fa secdef=false
+function audit_actor_name(p_company_id uuid) 1428924188941bbc8250c65a2f913dcf secdef=true
+function audit_entry_visible(p_company_id uuid, p_job_id text, p_entity text, p_entity_id text, p_field text) 5c3348d3fc970a73781729e7ac50db96 secdef=true
+function auto_invoice_restore_hand_stops(p_company_id uuid) f50c4ed6631bfd820773a28ed6dc4f49 secdef=false
+function auto_invoice_send_claim(p_invoice_id text) 5a30d7ef5377ceef540c3eece8d197b4 secdef=false
+function auto_invoice_send_finish(p_invoice_id text, p_status text, p_note text) d28e074055965e3d457aa1e70f25d4a7 secdef=false
+function auto_invoice_stop_split(p_company_id uuid) 1f8482ca15677b5063cb2df45544c6dc secdef=false
+function auto_invoice_stop_unsendable(p_company_id uuid, p_allowed boolean) 755318ac11a5080d44d45c6f068ac37d secdef=false
+function automation_batch_claim(p_batch_id uuid, p_company_id uuid, p_user uuid) 07666d843f5a7f0b7f2dc3cc97ff6387 secdef=false
+function automation_batch_item_finish(p_item_id uuid, p_status text) 9bce0b8309975b833760c6ebdbda5eba secdef=false
+function automation_batch_release(p_batch_id uuid) 1b0f91467ceab5a924f95eacbf8a11a8 secdef=false
+function booking_limits_take(p_ip_hash text, p_contact_hash text, p_max_visitor_hour integer, p_max_contact_day integer, p_max_day integer, p_max_pending integer) 4ea35803642d66ad67f6de27ce966280 secdef=true
+function booking_rate_limit_take(p_ip_hash text, p_max integer) 67a8e700de85f6fb2d7f8294f2e176e2 secdef=true
+function business_time_zone() a11c4b615754a844796089f38bd54216 secdef=false
+function calendar_jobs(p_company_id uuid) db77aebf61a0d56b5d8b88a65842751a secdef=true
+function can_change_job(p_company_id uuid, p_job_id text) c47f56d07cb0f84e0cc6a1318de5b569 secdef=true
+function can_read_customer(p_company_id uuid, p_customer_id text) da6b713dbd2cfcd1a8bcc3132b63010f secdef=true
+function can_read_job(p_company_id uuid, p_job_id text) a3a817ea9dcc70747349e0306e77ce33 secdef=true
+function change_job_price(p_job_id text, p_value numeric, p_hourly_rate numeric, p_billing_type text, p_reason text) d6f9cdf9aa78c03e8ac44b125f1ff208 secdef=true
+function check_crew_clock_tap(p_date text, p_time text, p_in text, p_kind text, p_now timestamp with time zone) 4a99aeecd1e3337b6d19b8a7b918ae72 secdef=false
+function claim_automation_send(p_company_id uuid, p_rule_kind text, p_dedupe_key text, p_target_id text, p_customer_id text, p_customer_name text) 98c3b3c8985f5800941d589ffbbe59e9 secdef=false
+function claim_day_plan_sends(p_company_id uuid, p_items jsonb, p_per_hour integer, p_per_day integer) 9992a81a560d019d24baae715ef676f1 secdef=false
+function claim_invoice_payer_sends(p_company_id uuid, p_invoice_id text, p_customer_id text, p_items jsonb, p_per_hour integer, p_per_day integer) 0834544f14fa8e5e950439ffb9de976f secdef=false
+function claim_payment_receipts(p_company_id uuid, p_invoice_id text, p_customer_id text, p_items jsonb, p_per_hour integer, p_per_day integer) ccf2797a684b0475b7b1bb59944d1358 secdef=false
+function clear_replaced_price(p_job_id text) c01134f8b153425019cc8f9093a04c0d secdef=true
+function clock_now() e291356058ac2e96aa695d59149c70b1 secdef=false
+function close_open_clocks_at_8pm(p_company_id uuid) 3e10d4d33759ff25270b57f93a3712e1 secdef=true
+function close_other_open_clocks() 6e38adb29cfd6416d8e8e3b5f21f41ab secdef=false
+function company_for_customer(p_company_id uuid) 0fa0dc00b58f17cb66c1eb4281c24fce secdef=false
+function create_estimate_accept_link(p_company_id uuid, p_estimate_id text, p_token_hash text, p_again boolean) 975f2bd8b2741a3fadf841ae602a6919 secdef=false
+function crew_directory(p_company_id uuid) af5b4550fd2bcebd7b0d5f2170f74a79 secdef=true
+function crew_job_price_before_change(p_job_id text) 0d08ab3f96c047ac6beef50ef5ea0cc9 secdef=true
+function crew_job_prices(p_company_id uuid) 755e8a3d7012afbe56b557a1fa243e87 secdef=true
+function crew_perm(p_company_id uuid, p_flag text) a1cd6c8bae370057cffc9b29dadc73ba secdef=true
+function current_crew_id(p_company_id uuid) ffd3c37e5c895aadde6379bcfed6345f secdef=true
+function current_crew_name(p_company_id uuid) e9d042608ec86d247b6403dccc8f0397 secdef=true
+function current_member_role(p_company_id uuid) 85fe74dd18a198b2845130c07b8cda5c secdef=true
+function customer_edit_allowed(p jsonb) 7ef9ca37d69442b17e00a853d66da164 secdef=false
+function customer_edit_changes_ok(p jsonb) 5e7d6c215571d6f3c37e194f0290a2bf secdef=false
+function customer_edit_describe(p jsonb) 79ba27e7b864399dcbe9f0960bd75509 secdef=false
+function customer_edit_fields() befbbeaba551ab186515a2f91ec300bb secdef=false
+function customer_email_thread(p_company_id uuid, p_customer_id text) 48e9fbab5d0ce571d48414a0371ded9b secdef=false
+function decline_customer_edit(p_request_id uuid, p_reason text) e58183a777c0f8c6ccf89b464d3f9e58 secdef=true
+function discard_automation_batch(p_batch_id uuid, p_item_ids uuid[]) 969153b525ef0f1f397b09d8cd5a0751 secdef=true
+function done_job_review_reason(j jobs, e estimates) 5cca0df159334b1786b5b6e2d7988ee9 secdef=false
+function drop_replaced_document_file() c34cf7a90823278a264de201efde05e2 secdef=false
+function equipment_problem_has_photo() 20ebb4dff81b94b07a70e2ba31fbf461 secdef=true
+function estimate_accept_links_revoke_on_change() 5a0704157415aa250a8f67fe79b74c10 secdef=true
+function estimate_accept_view(p_token_hash text) 4ea82a7a9bc3e1460d8800d99f3158e9 secdef=false
+function estimate_active_total(e estimates) 9f15c4bf057bf669b651321a975de2db secdef=false
+function estimate_author_card(p_company_id uuid) db48d0fe5e504fba7c0372dda9943fdb secdef=true
+function estimate_content_hash(e estimates) d8f013e7f91fc7aeae444e1fa6bb1b79 secdef=false
+function estimate_for_customer(e estimates) 874865196f9b7a0ce5b914aff3c37308 secdef=false
+function estimate_heads_up_recipients(p_company_id uuid) e9292c113279027f07e77b650b79987f secdef=true
+function estimate_link_state(l estimate_accept_links, e estimates) a57ae5186da8884a0f689c4bbd6e2138 secdef=false
+function finish_automation_send(p_send_id uuid, p_ok boolean, p_body text, p_job_id text, p_estimate_id text, p_sender_name text) e00c5447dd83eef5ce825fff67e26d2f secdef=false
+function finish_day_plan_send(p_send_id uuid, p_ok boolean) 38b88a18280b9304f96a39ce66eb4ef9 secdef=false
+function handle_crew_email_confirmed() 5fbb3629b1c4d4bf4794ee64326cb88a secdef=true
+function handle_new_crew_signup() c306fbf6941eb072d9d553526cdce13c secdef=true
+function hold_automation_emails(p_company_id uuid, p_items jsonb) 9a16109abe3e82752cfc68047602b624 secdef=false
+function invoice_for_done_job(j jobs) e4f11fce2b480384c5ba6e89b8a4576f secdef=true
+function invoice_is_split(p_splits jsonb) a77c2dd8c861cb8b2db1a816224c523b secdef=false
+function invoices_after_insert() 956319881139d45be239e1bebad9b33f secdef=true
+function invoices_auto_send_guard() 5a044c9de8698a76cb0b4aa388cbfbe8 secdef=false
+function invoices_unique_number() 7b31f82da2cd277053ef0f2710228d1d secdef=true
+function is_climber(p_company_id uuid) 4dea61252b7517002e0fdd2eb80586f8 secdef=true
+function is_company_admin(p_company_id uuid) 2372470e8f0715cea91ec0b426b385c5 secdef=true
+function is_company_member(p_company_id uuid) d0d59478b22b1e8fa6e54453333d0d10 secdef=true
+function is_company_owner(p_company_id uuid) 9f82d33b008cf78281a57bfbd6ae960f secdef=true
+function is_company_staff(p_company_id uuid) 7a09356276734676dcd9d32ccc39ef4c secdef=true
+function is_sales_person(p_company_id uuid) 03c634ff3a39cb9ad6390049ebb6a90f secdef=true
+function job_cost_columns() 74c4f9f45f710a127174d5ba6c6b5584 secdef=false
+function job_money_columns() 3085728b39dc5c091f7dad0b2dc3a788 secdef=false
+function job_money_visible(p_company_id uuid, p_crew_ids text[], p_date text, p_estimate_id text, p_customer_id text) 2df7f212bdcb37884f63ef6d2b067ec0 secdef=true
+function job_office_columns() f65caa430e00e80fbeaf903867e3e01b secdef=false
+function job_price_before_change(j jobs) 57295e468528d4d3d7d58585a2f838e4 secdef=true
+function job_row_assigned(p_company_id uuid, p_crew_ids text[], p_date text) 53ac3ec53884fa612394061912d27c23 secdef=true
+function job_row_visible(p_company_id uuid, p_crew_ids text[], p_date text) 0cd301ef237d536ed836ed33a28ac28d secdef=true
+function keep_estimate_author() acd1aedd868add864f55576c9005baec secdef=true
+function limit_crew_clock_times() 016be15c28134eccc73bdeca8ff19b6a secdef=true
+function limit_crew_job_edits() 75523f072d778dd2720028f987df6b76 secdef=true
+function limit_crew_self_edits() 16f16bf0d0fd864fef1acf460a6f6055 secdef=true
+function limit_member_audit_entries() 2d4b96a00c1df799cc180655d2c0dbe6 secdef=false
+function limit_sales_estimate_edits() a34be4b4bfe89969122dd54aedb8816f secdef=true
+function link_old_personal_notes() 68c0122f5038413bfc796df724aa1816 secdef=false
+function mark_job_price_change_seen(p_id uuid) 37a9247d415910b875a30785de9a71ca secdef=true
+function may_enter_hours_by_hand(p_company_id uuid) e630f97513b3edce1588c6dd7eeab14d secdef=true
+function mfa_satisfied() d50ab60ac98218630ce257e122fb19d8 secdef=true
+function next_invoice_number(p_company_id uuid) d928f123138f26be2e77ee8b6b6904bb secdef=false
+function on_job_deleted_invoice() de3433934b1f7b1a3b1e64618aae0a9a secdef=true
+function on_job_status_invoice() 9398c91dd476374dc4d6a5d7646c209d secdef=true
+function process_confirmed_signup(p_user_id uuid, p_email text, p_meta jsonb) 05e29001cfc7d1bd0282339a9926fabb secdef=true
+function protect_last_owner() d48acabd6651f5a8b32d9aa19c7ae118 secdef=true
+function public_rate_limit_take(p_bucket text, p_key_hash text, p_max integer, p_window_seconds integer) 25c5b69053ac940b0eeee05b9cb4ca2a secdef=false
+function reclaim_invoice_email(p_company_id uuid, p_dedupe_key text) 5bf83c1aaf83462b10fd2eb0e82c281d secdef=false
+function release_automation_send(p_send_id uuid) 9c95d87ba8f228ea917bd346ca75f4d2 secdef=false
+function reset_two_step_login(p_company_id uuid, p_user_id uuid) a0f01f016f36a73cd75532cf9b1b48b1 secdef=true
+function resolve_equipment_problem(p_problem_id uuid, p_action text) ab8a75cd67df8c6ebf4b059eea7affa4 secdef=false
+function sales_can_read_estimate(p_company_id uuid, p_customer_id text, p_created_by_crew_id text) 8b4963ca7ac86ebb4f52d3fb654c408d secdef=true
+function set_estimate_author() dec8dc414f8740c0162c948931e091a0 secdef=true
+function settings_auto_emails_since() c677af98c697134fdf824c3bd70463fb secdef=false
+function stamp_customer_edit_request() a0afd2970e6b75c3ca76b22b3a660f7e secdef=true
+function stamp_equipment_problem() 2feed08b51b8d06b1b1fb9153fea67b6 secdef=true
+function stamp_private_note_author() 9a9b59b2f1b47ff1807e604c37f1995f secdef=false
+function stamp_week_approval() 8deaf748a37fbb3e73397682536ff854 secdef=true
+function timesheet_clock_in_check(p_date text, p_in text, p_now timestamp with time zone) 6e69ec911df585aa5552bc963d85b206 secdef=false
+function timesheet_clock_out_check(p_date text, p_out text, p_in text, p_now timestamp with time zone) 95435ad4e9a508d35d54a0c5e2993dae secdef=false
+function timesheet_crew_overlap(p_company_id uuid, p_crew_id text, p_id text, p_date text, p_in text, p_out text) 4fe0fcc46fecef578ccb74df6e11e0a4 secdef=false
+function timesheet_may_auto_close(p_company_id uuid, p_date text, p_now timestamp with time zone) c7b2e2eea883455faafc2646fd473707 secdef=true
+function timesheet_tap_check(p_date text, p_time text, p_after_in text, p_max_age interval, p_now timestamp with time zone) 52c3b3ca932186fea4bb170ad4b52719 secdef=false
+function timesheet_tap_local(p_date text, p_time text, p_after_in text) 5bbe20dc07b4792d125e693a0469e9aa secdef=false
+function timesheet_tap_moments(p_local timestamp without time zone) ff2149be1b595a401c409d105f31562e secdef=false
+function timesheets_auto_closed_reset() cfe2affcd2c9eef99f2917315b171c5b secdef=false
+function two_step_logins(p_company_id uuid) abe2be8b172dca3aa49ea82306a69dc7 secdef=true
+index app_config_pkey df30a1260bd72a04c089657368181d06
+index audit_log_pkey 699c2e83d7415b2bc46801f073cacbb8
+index automation_batch_items_batch 297a826fd413f243e03c17e015ad2e64
+index automation_batch_items_company_key 689f28706f241c31295ea86c5dc37e00
+index automation_batch_items_one_waiting 77fd20fa4a548229a9a16c35a580340d
+index automation_batch_items_pkey f467023dfab2aff796a9e064cfd7749e
+index automation_batches_company_time 3306e6ac9a3777a5ba71cd7b2b9514a1
+index automation_batches_one_open a1c1526aa948dcb4c7e2aab96d232a13
+index automation_batches_pkey ac55221ffb30b73c530960ebc9a82b47
+index automation_runs_company_time 291428e37719e7642e51fff19f942e11
+index automation_runs_pkey d00fa78872bb4bd55997a894318305a0
+index automation_sends_company_id_dedupe_key_key 4788e786d8233dfe3416333502e93299
+index automation_sends_company_time 0de61edc8f682129e924b9a7a3bd02f5
+index automation_sends_customer b6a8ace4ca710551d4c9d1f644e6a9d9
+index automation_sends_pkey be55da269e8af670888a087826acf57f
+index automations_pkey 88c4da7ea4955ee16fc69e08193298bc
+index booking_rate_limits_contact_time 4d0e35da0b505e1d5d10ae3411f0e38a
+index booking_rate_limits_ip_time c397a7ac0fdba7a36b9191ccce8d2936
+index booking_rate_limits_pkey 8eab3983be3d24738a3a728e3ea5f351
+index booking_rate_limits_time 70d229b893472f71cb649a22368977f3
+index booking_requests_pkey 2daf7e17158c39684ce4a5c4c6455f67
+index chemical_records_pkey 74d5f72dd9d4ac9a987509cf02d46bab
+index closed_days_pkey 71581f159b2019ac9528212be5e16bbe
+index companies_pkey 5432bdbc84f521fbeb2451145455865c
+index company_document_files_company_id_id_key c699db792940273f2e2a7e79c662c882
+index company_document_files_pkey 361bf36a5866ef6547c25f2d09f07769
+index company_documents_company e4659d7d3fef2727b02ac819f9bd9740
+index company_documents_file b3070daeca7b913707968a54616ef496
+index company_documents_pkey 706fdef0adf6ab4064419c3a1c07a4c8
+index company_members_pkey 923ca6d212ae3bbdc041155a171915f7
+index crew_locations_pkey c22a212ab375be9b2fbc74ed40abfa27
+index crew_pkey 787b256e264e9d9cba696042831c2b09
+index crew_unavailability_pkey f64e9ae4e0f17f9421e4af16d14265cf
+index customer_addresses_pkey 35e422050aeab4dc9ff93478a6055995
+index customer_edit_requests_company_status 5d57934db4cfe3410db414184ab5c53f
+index customer_edit_requests_customer 5f33b59494544a9375e80b2c1b8f12ae
+index customer_edit_requests_pkey f578afb27b7cec8e9058f9125af2fe7a
+index customers_pkey b2df34d35701c38489542666b6769f13
+index day_crews_pkey 9cd167db618d72bdf5737316788cedb5
+index email_threads_pkey 4bc2786fbe6972c3138aa949b5d924db
+index equipment_notes_pkey 8126c4add24f32f79a54318856c1538b
+index equipment_pkey a6b5c7b923b902edf023586f5bfcba99
+index equipment_problem_photos_pkey 5ffaeac99e643a28c0543dda751ae517
+index equipment_problems_company_id_id_key 32ec6e49ab8c8747641bf030a8858c15
+index equipment_problems_company_status 0c67a69fbbd16a18bff892666eb43edc
+index equipment_problems_equipment 6b101d618278b37f976f56b3e215287b
+index equipment_problems_pkey 1d0c68e05423f9a6f09c0455e7f94e5d
+index equipment_problems_reporter 0dc9e7f4c9b29557ccddac5ed2418e8f
+index estimate_accept_links_estimate 06147720b693dde258977ac19811aa2c
+index estimate_accept_links_pkey 38aa77e184a5441937c24153034e50e8
+index estimate_accept_links_token_hash_key 4383a3e2eaa5d0bf23bc82b2a9f2ab26
+index estimates_pkey da2afb95e3b59de5dbfe3c685ce96ba9
+index gps_pings_pkey 02e550cd3f60135a647f118af5defcdd
+index idx_audit_log_company_customer_job 2186b9fbcea5d8c184edaa191f375480
+index idx_automations_company 22646c2020e5de9433d61ebcb5509e34
+index idx_booking_requests_company_date 4f9375458b28391a2a643e3c37f652fc
+index idx_chemical_records_program 04aa57e031542098c674e48a7dfc6454
+index idx_crew_company 707d6ab76cf57c8fbcde791e13413619
+index idx_crew_unavailability_company_crew 52301a57129a095aed8d96d3b9c8bb31
+index idx_customers_company 80d71d48a901d6ccf95f49e7e29ff41b
+index idx_day_crews_company_date 6ac1c048874118b9983d53713a57b710
+index idx_email_threads_customer 6dae7bbb91f82f8ebbe4dfe661a88370
+index idx_equipment_company f7e9f237431082a689236a66af4befc0
+index idx_equipment_notes_equipment_created ad5c77a5d217cee88b2f44aa7fb9d5e8
+index idx_estimates_company_customer 2ce7a9f57d5d929d78014322d5f75f7b
+index idx_estimates_job 0b45ab6993103fa63cd793d5347994c8
+index idx_gps_pings_crew_time 386d81eb9c72567668009b85d28c803b
+index idx_gps_pings_job_time a0c495c48654c60b332aba96a92ac27f
+index idx_invoices_company_customer 53da657d56583205786dc1c04bec6f5c
+index idx_invoices_job 3455a76a1221ba4c2551b1bea13af0cb
+index idx_jobs_company_customer_date 705b82870d7661f1ac6b1b6aad854197
+index idx_jobs_company_date 0a84dc34da4d33d90cbaefb004f92830
+index idx_jobs_crew 5d865d99f6c762e1af47913fc8199f95
+index idx_jobs_equipment 972beca8deffbbf2c3a1bd94ba55ddb3
+index idx_jobs_tree 7eaae2a0ec2b4dfb32e85537a16d413d
+index idx_maintenance_records_task ac1a9b601d712f9a4aee1a96c91cfdc5
+index idx_maintenance_tasks_equipment 29f40b24a8ec34446a5a3e4c1075d769
+index idx_messages_company_customer bad422d8131c2cb4349af8d51c55aca7
+index idx_messages_customer_time 5470512dee1afdb3d96cbeeaef1fdafc
+index idx_messages_job 553b235d6475ad068becd4858e49b2d6
+index idx_phc_programs_company_customer 9a7493d09163dc10ffce20d72f72adbd
+index idx_phc_programs_renewal 74cb26204761929fbed0d4737cab37a9
+index idx_phc_visits_program a5696a2c39d9fbce2f3d535e7999a8e1
+index idx_private_notes_customer 849769f61bb0a09d2396d9be804a56a7
+index idx_timesheets_company_crew_date 41d6829cd951423f85dde03f32311bc4
+index idx_timesheets_job a6e78d33b6c3e1a77f25a8c063d9cea1
+index idx_trees_customer 39152ac31cb29c4d1d967a12677cc771
+index idx_trees_source 73bf7590aa4fda946f337e3776774d6e
+index invoice_reviews_company_id_job_id_key 1cb1b1c1dd8938a5a7add176a41a3a55
+index invoice_reviews_company_time cd198d91c2ab91313fc62e73c9f12b1c
+index invoice_reviews_pkey cb36b3e98ddc9cbb8ef5c9e6a90bdc36
+index invoices_auto_send_sending 30c29755e93ce6ad22a06beee476de1c
+index invoices_auto_send_waiting df3d8dbe8aff56fb979417de70abfe52
+index invoices_company_number 4f705457904c40c905ab8187d02880a6
+index invoices_pkey ac2667ef52ae937cc9fbd909d9a929b2
+index job_price_changes_company_seen c32b1dad577b87988bd70b5ae1f38ba1
+index job_price_changes_job 5e902eea5f9fa783fe7178127747fc4a
+index job_price_changes_pkey 4c1bee8c5dfab6187df0600056dc2439
+index jobs_pkey 47262421c727307ac344956cf7d14923
+index location_requests_pkey 1b9537d044af39cbd116b59b4ac4695f
+index maintenance_records_pkey 72a5c0081ab0e9d801e1751926742928
+index maintenance_tasks_pkey 16a68e2ecf3bb23611e3e81397795065
+index messages_pkey 36279f31c7c3d6b21ad4bc6add9dac0a
+index phc_programs_pkey 6d2d6d8d420d60b4756e0aed877379c2
+index phc_visits_pkey 24d5cc65975d96f08599f9a3498d56fc
+index private_notes_pkey 0f83e70a6c36bfe0a311b5a4f50bfe64
+index public_rate_limits_lookup 4b5a9706a2d72364a43ef6a36b26bdcc
+index public_rate_limits_pkey a3eaee661d2af312b9ce1eaa60ce3c71
+index settings_pkey 7fc429aa4425466c2df43cb112771d03
+index time_off_requests_pkey 9ed6c2ffdb8eedbf5ec52da2441e65eb
+index timesheet_week_approvals_pkey 789b8191e46b65acd583b93a4d354382
+index timesheets_pkey 8503a099c4914c1307cb509b70ed95a4
+index trees_pkey 065c1c9200f772b9510b5c0e5f9bad9e
+policy audit_log | members insert audit_log | INSERT | authenticated | 12fafe23ba5e430bb1b0ab064b3280cf
+policy audit_log | read audit_log | SELECT | authenticated | cb4b61c34a8f93d31fb4a3c2f71006c3
+policy automation_batch_items | staff read automation_batch_items | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy automation_batches | staff read automation_batches | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy automation_runs | staff read automation_runs | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy automation_sends | staff read automation_sends | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy automations | staff all automations | ALL | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy booking_requests | staff all booking_requests | ALL | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy chemical_records | staff all chemical_records | ALL | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy closed_days | admins delete closed_days | DELETE | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy closed_days | admins insert closed_days | INSERT | authenticated | bad9696266f0360d1d282f4d5fcc7939
+policy closed_days | admins update closed_days | UPDATE | authenticated | 4541b5596d2058f4c17f30a9e0f427cd
+policy closed_days | members read closed_days | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy closed_days | public read closed_days | SELECT | anon | f5518fcf8f60ca8944f6ea7c12efdcaf
+policy companies | admins update own company | UPDATE | authenticated | ee3b7e8f540f122692f8ebf3571ebef4
+policy companies | members read own company | SELECT | authenticated | 39371259d89e67862a9f5d1de2b92758
+policy company_document_files | staff delete document files | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy company_document_files | staff read document files | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy company_document_files | staff upload document files | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy company_documents | staff add documents | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy company_documents | staff change documents | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy company_documents | staff delete documents | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy company_documents | staff read documents | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy company_members | admins add company memberships | INSERT | authenticated | 82b55534c198067728a17bf9db271617
+policy company_members | admins change company memberships | UPDATE | authenticated | 9e9a19650c98bd7f60a40e38888867fb
+policy company_members | admins read company memberships | SELECT | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy company_members | admins remove company memberships | DELETE | authenticated | db180c53679091cf3acbb24a28de691d
+policy company_members | members read own membership | SELECT | authenticated | 90adf49e3101be4665a2a0bff37c4b93
+policy crew | admins delete crew | DELETE | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy crew | admins insert crew | INSERT | authenticated | bad9696266f0360d1d282f4d5fcc7939
+policy crew | read crew | SELECT | authenticated | 90b400af72bcc896de52214237ac5c18
+policy crew | update crew | UPDATE | authenticated | 06ae65ac4c5e9b5e977cd7ba9c635588
+policy crew_locations | insert crew_locations | INSERT | authenticated | 7fd3628ede12c183d4c8503ba248ddb9
+policy crew_locations | read crew_locations | SELECT | authenticated | 370f901d90e47ac46ff06dd137f1f042
+policy crew_locations | staff delete crew_locations | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy crew_locations | update crew_locations | UPDATE | authenticated | 571ac0000586696597b64f2e873f6bf5
+policy crew_unavailability | insert crew_unavailability | INSERT | authenticated | 7fd3628ede12c183d4c8503ba248ddb9
+policy crew_unavailability | read crew_unavailability | SELECT | authenticated | 370f901d90e47ac46ff06dd137f1f042
+policy crew_unavailability | staff delete crew_unavailability | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy crew_unavailability | update crew_unavailability | UPDATE | authenticated | 571ac0000586696597b64f2e873f6bf5
+policy customer_addresses | read customer_addresses | SELECT | authenticated | 1524610b6405d9ed709a5d22830f14df
+policy customer_addresses | sales read customer_addresses | SELECT | authenticated | 45bc26603c4ecdb6113b42c44d6b55c6
+policy customer_addresses | staff delete customer_addresses | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy customer_addresses | staff insert customer_addresses | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy customer_addresses | staff update customer_addresses | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy customer_edit_requests | sales read own customer edits | SELECT | authenticated | 9d1921aa3f8076ef725db540f7ff8ad8
+policy customer_edit_requests | sales suggest customer edits | INSERT | authenticated | 20b6911d1f15f9202f80e9c86971ab55
+policy customer_edit_requests | staff delete customer edits | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy customer_edit_requests | staff read customer edits | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy customers | read customers | SELECT | authenticated | 866ed0bda96280222e755c88bb2ffb53
+policy customers | sales insert customers | INSERT | authenticated | 50dd4a97b53c5676423103765e119b4c
+policy customers | sales read customers | SELECT | authenticated | 45bc26603c4ecdb6113b42c44d6b55c6
+policy customers | staff delete customers | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy customers | staff insert customers | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy customers | staff update customers | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy day_crews | members read day_crews | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy day_crews | staff delete day_crews | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy day_crews | staff insert day_crews | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy day_crews | staff update day_crews | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy email_threads | insert email_threads | INSERT | authenticated | 3ab31fdaa001bbed8c2742b6ed7bcc29
+policy email_threads | read email_threads | SELECT | authenticated | 1524610b6405d9ed709a5d22830f14df
+policy email_threads | staff delete email_threads | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy email_threads | staff update email_threads | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy equipment | members read equipment | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy equipment | staff delete equipment | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy equipment | staff insert equipment | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy equipment | staff update equipment | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy equipment_notes | authors delete own equipment_notes | DELETE | authenticated | 23b493e3eea94f84aba3815373064a59
+policy equipment_notes | insert equipment_notes | INSERT | authenticated | 7c26fe23e926dd5bfb2019276ebbcc38
+policy equipment_notes | members read equipment_notes | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy equipment_notes | staff delete equipment_notes | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy equipment_notes | staff update equipment_notes | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy equipment_problem_photos | reporters add problem photos | INSERT | authenticated | 8031b0c195d41dc59d49a171a91f5c0d
+policy equipment_problem_photos | reporters read own problem photos | SELECT | authenticated | a0498289cbc8619cc4bff0dbd42dc439
+policy equipment_problem_photos | staff delete problem photos | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy equipment_problem_photos | staff read problem photos | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy equipment_problems | members report equipment problems | INSERT | authenticated | 1f93cc96f62dcd2ee99361559107f420
+policy equipment_problems | reporters read own equipment problems | SELECT | authenticated | 161028785e376665a802f63742176360
+policy equipment_problems | staff change equipment problems | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy equipment_problems | staff delete equipment problems | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy equipment_problems | staff read equipment problems | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy estimates | read estimates | SELECT | authenticated | 1778def779c768b014afac5299a14385
+policy estimates | sales estimates ceiling | SELECT | authenticated | 54d4cb3f78b834264d262a7b52591306
+policy estimates | sales insert draft estimates | INSERT | authenticated | 5ed1a8322cb63f8d29aae4b7ed9068c5
+policy estimates | sales read estimates | SELECT | authenticated | e7d19b6578f3b322b9245879b3817aa4
+policy estimates | sales update draft estimates | UPDATE | authenticated | be9624ca215092cbc97547b65102bd36
+policy estimates | staff delete estimates | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy estimates | staff insert estimates | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy estimates | staff update estimates | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy gps_pings | insert gps_pings | INSERT | authenticated | 7fd3628ede12c183d4c8503ba248ddb9
+policy gps_pings | read gps_pings | SELECT | authenticated | 370f901d90e47ac46ff06dd137f1f042
+policy gps_pings | staff delete gps_pings | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy gps_pings | update gps_pings | UPDATE | authenticated | 571ac0000586696597b64f2e873f6bf5
+policy invoice_reviews | staff delete invoice_reviews | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy invoice_reviews | staff read invoice_reviews | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy invoices | read invoices | SELECT | authenticated | 1778def779c768b014afac5299a14385
+policy invoices | sales see no invoices | SELECT | authenticated | d8319bda87583ebc78b7048d0d63d49b
+policy invoices | staff delete invoices | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy invoices | staff insert invoices | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy invoices | staff update invoices | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy job_price_changes | climbers read their jobs' price changes | SELECT | authenticated | 046e1baa4c265f8b0835cc28162b6411
+policy job_price_changes | staff read job price changes | SELECT | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy jobs | read jobs | SELECT | authenticated | 0c4bda6fc8a5bedf112d3db5ec0290ed
+policy jobs | staff delete jobs | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy jobs | staff insert jobs | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy jobs | update assigned jobs | UPDATE | authenticated | b70ed14c2293e9378eeba631c3e66c11
+policy location_requests | read location_requests | SELECT | authenticated | df77127dfbc57aac90f434a7db4c3fad
+policy location_requests | staff delete location_requests | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy location_requests | staff insert location_requests | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy location_requests | staff update location_requests | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy maintenance_records | members read maintenance_records | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy maintenance_records | staff delete maintenance_records | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy maintenance_records | staff insert maintenance_records | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy maintenance_records | staff update maintenance_records | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy maintenance_tasks | members read maintenance_tasks | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy maintenance_tasks | staff delete maintenance_tasks | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy maintenance_tasks | staff insert maintenance_tasks | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy maintenance_tasks | staff update maintenance_tasks | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy messages | insert messages | INSERT | authenticated | e137f5acc4baf93aae49b025ecee3998
+policy messages | read messages | SELECT | authenticated | 3afc3d50d120e26c98f34babd2434201
+policy messages | staff delete messages | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy messages | staff update messages | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy phc_programs | staff all phc_programs | ALL | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy phc_visits | staff all phc_visits | ALL | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+policy private_notes | delete private_notes | DELETE | authenticated | b928f831850d67791d81bc8a5f74b77e
+policy private_notes | delete team notes | DELETE | authenticated | d056b6d2141b7f787b4e676482c47c62
+policy private_notes | insert private_notes | INSERT | authenticated | aa148c923e6c2d91148f7e8bf96a5ed9
+policy private_notes | read private_notes | SELECT | authenticated | b928f831850d67791d81bc8a5f74b77e
+policy private_notes | read team notes | SELECT | authenticated | bbe8ef1235e7eb4009b0b73113f114d6
+policy private_notes | staff add team notes | INSERT | authenticated | bef1deef47b133b3344ab3c6e00d4992
+policy private_notes | update private_notes | UPDATE | authenticated | 7ef7213a7f3b2b9b717397ad1a702ef1
+policy private_notes | update team notes | UPDATE | authenticated | c122f90827efc4aeb2b4f5df696559cc
+policy settings | admins delete settings | DELETE | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy settings | admins insert settings | INSERT | authenticated | bad9696266f0360d1d282f4d5fcc7939
+policy settings | admins update settings | UPDATE | authenticated | 4541b5596d2058f4c17f30a9e0f427cd
+policy settings | members read settings | SELECT | authenticated | 36a19636a551d4aa5d5ff9c025c77656
+policy time_off_requests | crew delete own pending time_off_requests | DELETE | authenticated | aa22599f185719731b06a183cfa56dde
+policy time_off_requests | insert time_off_requests | INSERT | authenticated | bd852140b9636eae0590b04e5d3d939f
+policy time_off_requests | read time_off_requests | SELECT | authenticated | 370f901d90e47ac46ff06dd137f1f042
+policy time_off_requests | staff delete time_off_requests | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy time_off_requests | update time_off_requests | UPDATE | authenticated | db4b1de565c1d7ccea33cf92239c38aa
+policy timesheet_week_approvals | admins approve weeks | INSERT | authenticated | bad9696266f0360d1d282f4d5fcc7939
+policy timesheet_week_approvals | admins read week approvals | SELECT | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy timesheet_week_approvals | admins undo week approvals | DELETE | authenticated | cd4d15d53582660cc1a4e8c1ba309448
+policy timesheets | insert timesheets | INSERT | authenticated | 7fd3628ede12c183d4c8503ba248ddb9
+policy timesheets | read timesheets | SELECT | authenticated | 370f901d90e47ac46ff06dd137f1f042
+policy timesheets | staff delete timesheets | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy timesheets | update timesheets | UPDATE | authenticated | 571ac0000586696597b64f2e873f6bf5
+policy trees | read trees | SELECT | authenticated | 1524610b6405d9ed709a5d22830f14df
+policy trees | staff delete trees | DELETE | authenticated | 4f2045882aa41d884d71cb295be480f6
+policy trees | staff insert trees | INSERT | authenticated | bfa4ef279b61dfa4fea4ad6c8235286c
+policy trees | staff update trees | UPDATE | authenticated | 7a6f88cb226962cfb401fce44e025ef6
+realtime closed_days
+realtime crew
+realtime crew_locations
+realtime crew_unavailability
+realtime customer_edit_requests
+realtime day_crews
+realtime equipment_problems
+realtime job_price_changes
+realtime jobs
+realtime location_requests
+realtime settings
+realtime time_off_requests
+realtime timesheets
+table app_config rls=true
+table audit_log rls=true
+table automation_batch_items rls=true
+table automation_batches rls=true
+table automation_runs rls=true
+table automation_sends rls=true
+table automations rls=true
+table booking_rate_limits rls=true
+table booking_requests rls=true
+table chemical_records rls=true
+table closed_days rls=true
+table companies rls=true
+table company_document_files rls=true
+table company_documents rls=true
+table company_members rls=true
+table crew rls=true
+table crew_locations rls=true
+table crew_unavailability rls=true
+table customer_addresses rls=true
+table customer_edit_requests rls=true
+table customers rls=true
+table day_crews rls=true
+table email_threads rls=true
+table equipment rls=true
+table equipment_notes rls=true
+table equipment_problem_photos rls=true
+table equipment_problems rls=true
+table estimate_accept_links rls=true
+table estimates rls=true
+table gps_pings rls=true
+table invoice_reviews rls=true
+table invoices rls=true
+table job_price_changes rls=true
+table jobs rls=true
+table location_requests rls=true
+table maintenance_records rls=true
+table maintenance_tasks rls=true
+table messages rls=true
+table phc_programs rls=true
+table phc_visits rls=true
+table private_notes rls=true
+table public_rate_limits rls=true
+table settings rls=true
+table time_off_requests rls=true
+table timesheet_week_approvals rls=true
+table timesheets rls=true
+table trees rls=true
+trigger auth.users on_auth_user_created 905ab16caeae61cb5b84819c14d63914
+trigger auth.users on_auth_user_email_confirmed c2684a1338b351d75d10e01447351e8d
+trigger public.audit_log limit_member_audit_entries 87c587ab0a1b28986d82b151a099d2d2
+trigger public.company_documents drop_replaced_document_file e0b2d7734353ea8e46c98e45cf77b834
+trigger public.company_members protect_last_owner 6b1588397237f33849a656e4013defcc
+trigger public.crew limit_crew_self_edits 56ea8ac38fdec4fcad093ab177c91f37
+trigger public.customer_edit_requests stamp_customer_edit_request 5a105e3c61588b32729c54390032fc0f
+trigger public.equipment_problem_photos equipment_problem_has_photo e548ac86ff5b86b39731727f93f46948
+trigger public.equipment_problems stamp_equipment_problem 6e4735309401fa1012e603882f2f5c3f
+trigger public.estimates estimate_accept_links_revoke_on_change a5843a10bae3b28682c70aaa7850c28c
+trigger public.estimates estimate_author_keep 03df87e6ec538068e776c95e7cb92987
+trigger public.estimates estimate_author_on_insert 84416a22223b41a3fc25d59fb75dc6d9
+trigger public.estimates limit_sales_estimate_edits 7fb5e481e0c4117fbb90363e58ce54b7
+trigger public.invoices invoices_after_insert 883bbbcc293820bd5ec1a468d302090b
+trigger public.invoices invoices_auto_send_guard 60bf7d1dc27d90e7fcee1e533f916f08
+trigger public.invoices invoices_unique_number dbd5b75441f4104c7f1e48010f696128
+trigger public.jobs limit_crew_job_edits d434997bff59c4f52c2515a9a8c5457e
+trigger public.jobs on_job_deleted_invoice 4b8814c892d3347d1ac58d63fc7c6a4b
+trigger public.jobs on_job_status_invoice 39c8cae5ead9b3bd4901e3d635651b50
+trigger public.private_notes stamp_private_note_author ee409fb0027ae1caa9849144b0a39398
+trigger public.settings settings_auto_emails_since 9a361ab31cfb527451600b73006f124a
+trigger public.timesheet_week_approvals stamp_week_approval c36bd2b3ba14477193c269e3318f46d4
+trigger public.timesheets close_other_open_clocks 5248bba6acd37c31b47b9556fd4ae039
+trigger public.timesheets limit_crew_clock_times d9190eb579b2340a954ad8e5fdf5e695
+trigger public.timesheets timesheets_auto_closed_reset 2351fe3e815a1476ff4de2a0840cfcb2
+view company_public e602346df344d672c18bdbf2133f88e2

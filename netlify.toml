@@ -1,0 +1,67 @@
+# Netlify settings for the website. The site is published ONLY by the
+# GitHub deploy workflow (.github/workflows/deploy.yml), right after the
+# database update. Do NOT connect the Netlify site to GitHub.
+#
+# YOUR-PROJECT-REF below is filled in by the deploy workflow from the
+# GitHub variable SUPABASE_PROJECT_REF; you do not need to edit it.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The app is a single page that routes with #hashes; any unknown path
+# serves the app. That includes the customer's private accept page
+# /accept/<token> (from the estimate email), which the app shows
+# outside the login.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers (audit SEC-10). The Content-Security-Policy lists the
+# only places the app may load code, styles, images and data from. When
+# the app starts using a new outside service, add its address here.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = """\
+      default-src 'self'; \
+      script-src 'self' https://challenges.cloudflare.com; \
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+      font-src 'self' data: https://fonts.gstatic.com; \
+      img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://tiles.arcgis.com https://planttalk.colostate.edu https://extension.colostate.edu https://thumb.wikimedia.org https://upload.wikimedia.org; \
+      connect-src 'self' https://YOUR-PROJECT-REF.supabase.co wss://YOUR-PROJECT-REF.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://challenges.cloudflare.com; \
+      frame-src https://challenges.cloudflare.com; \
+      worker-src 'self'; \
+      manifest-src 'self'; \
+      object-src 'none'; \
+      base-uri 'self'; \
+      form-action 'self'; \
+      frame-ancestors 'none'"""
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "geolocation=(self), camera=(), microphone=(), payment=(), usb=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# The private accept page: never indexed by search engines, never cached.
+[[headers]]
+  for = "/accept/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
+# The build id open apps check to notice a new deploy (src/buildCheck.ts).
+[[headers]]
+  for = "/version.json"
+  [headers.values]
+    Cache-Control = "no-store"
+
+# Build files have hashed names that never change: phones and browsers
+# may keep them (the service worker saves them for offline use too).
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

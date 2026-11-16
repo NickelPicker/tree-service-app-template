@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/*
+ * Brand theme: a forest green, with an amber secondary accent. The green
+ * scale below remaps Tailwind's emerald scale, so every emerald button,
+ * badge, and active state in the app takes the brand green instead — one
+ * change, app-wide. Change the values here to re-theme the whole app.
+ *   brand green #2f6b40 · accent amber #b45309
+ */
+@theme {
+  --color-emerald-50: #f2f7f3;
+  --color-emerald-100: #dfeee2;
+  --color-emerald-200: #c0dcc6;
+  --color-emerald-300: #93c29f;
+  --color-emerald-400: #5fa071;
+  --color-emerald-500: #3d8552;
+  --color-emerald-600: #2f6b40;
+  --color-emerald-700: #285736;
+  --color-emerald-800: #23462e;
+  --color-emerald-900: #1d3a27;
+}
+
+html {
+  font-family: ui-sans-system, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+/* Headings use the system font; to use a web font, load it in index.html
+   and allow its host in the Content-Security-Policy in netlify.toml. */
+h1,
+h2,
+h3 {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Slim horizontal scrollbar for the schedule grid on small screens */
+.scroll-x::-webkit-scrollbar {
+  height: 8px;
+}
+.scroll-x::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+/*
+ * Dashboard maps sit behind every popup/modal on the page. Leaflet's
+ * panes carry their own z-indexes (tiles 200, overlay 400, markers
+ * 600, popups 700, controls 1000), and a bare .leaflet-container
+ * creates no stacking context — so the map painted over the
+ * quick-assign popover (z-30) and its backdrop (z-20). The wrapper
+ * in Dashboard.tsx is `relative z-0 isolate`, and this rule pins the
+ * container itself to 0 inside it, so the whole map — tiles, pins,
+ * and its own popups — stays below every page-level overlay. Scoped
+ * to .dashboard-map on purpose: the Schedule's pinned day-map panel
+ * (fixed, z-40) is untouched.
+ */
+.dashboard-map .leaflet-container {
+  z-index: 0;
+}
+
+/* The minimized New invoice bar (InvoiceComposer) docks at the bottom of a
+   phone screen: keep the end of the page reachable above it. */
+@media (max-width: 639px) {
+  body.compose-docked {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+  }
+}

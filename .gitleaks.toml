@@ -1,0 +1,14 @@
+# gitleaks settings: the default rules, plus values that are public by
+# design and safe to commit.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public by design"
+regexes = [
+  # Supabase publishable key: meant to be in the browser app; row-level
+  # security protects the data.
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  # Record ids (UUIDs) such as login ids in migrations: identifiers, not secrets.
+  '''[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
+]

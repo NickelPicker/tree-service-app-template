@@ -1,0 +1,645 @@
+# Deploys the database, the edge functions and the website.
+#
+# - Every push to main: test, build, rehearse on a copy of the live
+#   data, then deploy everything (database + website together).
+# - Run by hand (Actions → Deploy Supabase → Run workflow):
+#     check           (default) report only, plus a rehearsal; writes nothing live
+#     deploy          deploy now (main only; same steps as a push)
+#     email-settings  quick email switch (main only, about a minute): applies
+#                     GMAIL_SENDING / EMAIL_TEST_MODE / EMAIL_TEST_RECIPIENTS to
+#                     the functions and the login emails and checks they stuck.
+#                     No tests, no migrations, no website.
+#
+# One-time setup: see README.md, "Set up GitHub". In short
+# (repo → Settings → Secrets and variables → Actions):
+#
+# Secrets (private):
+#   SUPABASE_ACCESS_TOKEN   required (supabase.com → Account → Access Tokens)
+#   SUPABASE_DB_PASSWORD    required: the database password you chose when
+#                           you created the Supabase project
+#   NETLIFY_AUTH_TOKEN      required to publish the website (Netlify → User
+#                           settings → Applications → Personal access tokens)
+#   TURNSTILE_SECRET_KEY    optional until the spam check is set up
+#   GMAIL_APP_PASSWORD      optional: emails go out through the business Gmail
+#                           (Google Account → Security → App passwords)
+#
+# Variables (not secret):
+#   SUPABASE_PROJECT_REF     required, e.g. abcdefghijklmnopqrst (Supabase →
+#                            Project Settings → General → Project ID)
+#   SUPABASE_PUBLISHABLE_KEY required (Supabase → Project Settings → API Keys)
+#   NETLIFY_SITE_NAME        required, e.g. my-tree-app (from my-tree-app.netlify.app)
+#   OWNER_EMAIL              required: the email that becomes the owner login
+#   SITE_URL                 optional: your own web address, if not the
+#                            netlify.app one (e.g. https://app.example.com)
+#   BUSINESS_NAME            optional: the name emails come from
+#   GMAIL_ADDRESS            optional: the business Gmail emails come from
+#   TURNSTILE_SITE_KEY       optional: Cloudflare Turnstile site key
+#   GMAIL_SENDING            "on" lets the app use Gmail (default: off)
+#   EMAIL_TEST_MODE          "off" lets emails reach customers (default: on,
+#                            only GMAIL_ADDRESS and EMAIL_TEST_RECIPIENTS get mail)
+#   EMAIL_TEST_RECIPIENTS    your own test addresses, comma separated
+# Until the required ones are saved, the deploy is skipped with a note.
+# Do NOT also connect the Netlify site to GitHub: the site must only be
+# published by this workflow, right after the database update.
+name: Deploy Supabase
+
+on:
+  push:
+    branches: [main]
+    # Documentation-only changes do not need a deploy.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check = report + rehearsal only; deploy = deploy now (main only); email-settings = apply the email switches only (main only)"
+        type: choice
+        options: [check, deploy, email-settings]
+        default: check
+
+# One run at a time, start to finish. The rehearsal and the deploy both
+# sign in to the live project with a temporary login; two runs at once
+# (two merges a few seconds apart) reset each other's password and fail.
+# A run that is waiting is replaced by a newer one (it deploys the newer
+# main, which includes the older change); a running one is never stopped.
+concurrency:
+  group: deploy-live
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
+env:
+  PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+  SITE_URL: ${{ vars.SITE_URL || format('https://{0}.netlify.app', vars.NETLIFY_SITE_NAME) }}
+  NETLIFY_SITE: ${{ vars.NETLIFY_SITE_NAME }}
+  NETLIFY_CLI: netlify-cli@17.38.1
+  SUPABASE_CLI: 3.1.0
+  LOCAL_ONLY_SERVICES: studio,imgproxy,storage-api,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit,realtime
+
+jobs:
+  # Quick email switch: the owner changed GMAIL_SENDING, EMAIL_TEST_MODE
+  # or EMAIL_TEST_RECIPIENTS and wants it live now, without a full deploy.
+  # Same steps as the deploy's, then a check that an "off" really stuck.
+  email-settings:
+    name: Apply the email switches only
+    needs: [setup-check]
+    if: needs.setup-check.outputs.configured == 'true' && github.event_name == 'workflow_dispatch' && inputs.mode == 'email-settings' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Link the project
+        run: supabase link --project-ref "$PROJECT_REF"
+      - name: Email functions (Gmail password, test mode)
+        env:
+          GMAIL_APP_PASSWORD: ${{ vars.GMAIL_SENDING == 'on' && secrets.GMAIL_APP_PASSWORD || '' }}
+          EMAIL_TEST_MODE: ${{ vars.EMAIL_TEST_MODE == 'off' && 'off' || 'on' }}
+          EMAIL_TEST_RECIPIENTS: ${{ vars.EMAIL_TEST_RECIPIENTS }}
+          GMAIL_ADDRESS: ${{ vars.GMAIL_ADDRESS }}
+          SENDER_NAME: ${{ vars.BUSINESS_NAME }}
+        run: bash .github/scripts/email-settings.sh secrets
+      - name: Login emails through Gmail, and password rules
+        if: always()
+        env:
+          LOGIN_GMAIL_PASSWORD: ${{ vars.GMAIL_SENDING == 'on' && vars.EMAIL_TEST_MODE == 'off' && secrets.GMAIL_APP_PASSWORD || '' }}
+          GMAIL_ADDRESS: ${{ vars.GMAIL_ADDRESS }}
+          SENDER_NAME: ${{ vars.BUSINESS_NAME }}
+        run: bash .github/scripts/email-settings.sh login
+      - name: Check the email switches stuck
+        if: always()
+        env:
+          FUNCTIONS_GMAIL: ${{ vars.GMAIL_SENDING == 'on' && secrets.GMAIL_APP_PASSWORD != '' && 'on' || 'off' }}
+          LOGIN_GMAIL: ${{ vars.GMAIL_SENDING == 'on' && vars.EMAIL_TEST_MODE == 'off' && secrets.GMAIL_APP_PASSWORD != '' && 'on' || 'off' }}
+        run: bash .github/scripts/email-settings.sh verify
+
+  test:
+    name: Database tests (local Supabase)
+    # The quick "email-settings" run skips tests, build and rehearsal.
+    if: github.event_name != 'workflow_dispatch' || inputs.mode != 'email-settings'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Start local Supabase (database only)
+        run: supabase start -x "$LOCAL_ONLY_SERVICES"
+      - name: Run pgTAP tests
+        run: supabase test db
+
+  # Built without any keys in reach (npm install scripts never see them).
+  build:
+    name: Build the website
+    if: github.event_name != 'workflow_dispatch' || inputs.mode != 'email-settings'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Build with your project's public values
+        env:
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_PROJECT_REF && format('https://{0}.supabase.co', vars.SUPABASE_PROJECT_REF) || '' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+        run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: dist
+          retention-days: 7
+
+  # Until the access token is saved, the live steps are skipped with a
+  # note instead of failing on every merge.
+  setup-check:
+    name: Check deploy settings
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          HAS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+          HAS_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD != '' }}
+          HAS_NETLIFY: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+          REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          KEY_SET: ${{ vars.SUPABASE_PUBLISHABLE_KEY != '' }}
+          SITE_SET: ${{ vars.NETLIFY_SITE_NAME != '' }}
+          OWNER_SET: ${{ vars.OWNER_EMAIL != '' }}
+        run: |
+          missing=()
+          [ "$HAS_TOKEN" = "true" ] || missing+=("secret SUPABASE_ACCESS_TOKEN")
+          [ "$HAS_DB_PASSWORD" = "true" ] || missing+=("secret SUPABASE_DB_PASSWORD")
+          [ "$HAS_NETLIFY" = "true" ] || missing+=("secret NETLIFY_AUTH_TOKEN")
+          [[ "$REF" =~ ^[a-z0-9]{20}$ ]] || missing+=("variable SUPABASE_PROJECT_REF (20 lowercase letters/numbers)")
+          [ "$KEY_SET" = "true" ] || missing+=("variable SUPABASE_PUBLISHABLE_KEY")
+          [ "$SITE_SET" = "true" ] || missing+=("variable NETLIFY_SITE_NAME")
+          [ "$OWNER_SET" = "true" ] || missing+=("variable OWNER_EMAIL")
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Deploy skipped until these are saved (README.md, Set up GitHub): ${missing[*]}"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: Check the live project (changes nothing)
+    needs: [setup-check]
+    if: needs.setup-check.outputs.configured == 'true' && github.event_name == 'workflow_dispatch' && inputs.mode == 'check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      HAS_NETLIFY: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+      HAS_GMAIL: ${{ secrets.GMAIL_APP_PASSWORD != '' }}
+      GMAIL_SENDING: ${{ vars.GMAIL_SENDING == 'on' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Link the project
+        run: supabase link --project-ref "$PROJECT_REF"
+      - name: Migration history on the live project
+        run: supabase migration list --remote ${SUPABASE_DB_PASSWORD:+--password "$SUPABASE_DB_PASSWORD"}
+      - name: What a deploy would apply (dry run)
+        run: supabase db push --remote --dry-run ${SUPABASE_DB_PASSWORD:+--password "$SUPABASE_DB_PASSWORD"}
+      - name: Summary (counts only, read-only)
+        if: success() || failure()
+        run: |
+          q() { supabase db query --remote --read-only "$1" || echo "::warning::query failed"; }
+          echo "== rows per company"; q "select co.id company_id, (select count(*) from public.crew c where c.company_id = co.id) crew, (select count(*) from public.customers c where c.company_id = co.id) customers, (select count(*) from public.jobs c where c.company_id = co.id) jobs from public.companies co order by co.created_at"
+          echo "== memberships by role"; q "select company_id, role, count(*) from public.company_members group by 1, 2 order by 1, 2"
+          echo "== owner email has a confirmed login"; q "select count(*) as owner_email_logins from auth.users where lower(email) = (select owner_email from public.app_config) and email_confirmed_at is not null"
+          echo "Netlify token saved: $HAS_NETLIFY"
+      - name: Owner set-up checklist (read-only; counts and team names only)
+        if: success() || failure()
+        run: |
+          echo "== Gmail app password saved as a GitHub secret: $HAS_GMAIL"
+          echo "== Gmail sending approved (variable GMAIL_SENDING=on): $GMAIL_SENDING"
+          echo "== Email test mode (only test addresses get emails unless EMAIL_TEST_MODE=off): ${{ vars.EMAIL_TEST_MODE == 'off' && 'off' || 'on' }}"
+          supabase db query --remote --read-only -f .github/diagnostics/owner_checklist.sql \
+            || echo "::warning::could not read the checklist"
+      - name: Login settings (read-only)
+        if: success() || failure()
+        run: |
+          curl -fsS --retry 5 "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > auth.json \
+            && jq '{site_url, uri_allow_list, mailer_autoconfirm, password_min_length, smtp_host_set: (.smtp_host != null and .smtp_host != ""), security_captcha_enabled, password_hibp_enabled}' auth.json \
+            || echo "::warning::could not read the login settings"
+      - name: Structure compared with the migrations (read-only)
+        if: success() || failure()
+        run: |
+          supabase db query --remote --read-only \
+            --output-format json -f .github/diagnostics/structure_fingerprint.sql > live.json || true
+          jq -r '[.. | objects | select(has("fingerprint")) | .fingerprint] | first // empty' live.json > live.txt || true
+          if [ ! -s live.txt ]; then echo "::warning::could not read the structure"; exit 0; fi
+          echo "== live vs after-deploy ('<' only live, '>' only after deploy)"
+          diff live.txt .github/diagnostics/expected_after_deploy.txt && echo "IDENTICAL to after-deploy" || true
+
+  # A full dress rehearsal on a fresh copy of the live database, on this
+  # runner only (the data copy is never uploaded and is deleted with the
+  # runner). The deploy only runs if this passes.
+  rehearse:
+    name: Rehearse on a copy of the live data
+    needs: [setup-check]
+    if: needs.setup-check.outputs.configured == 'true' && (github.event_name != 'workflow_dispatch' || inputs.mode != 'email-settings')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Start an empty local Supabase
+        run: |
+          mkdir -p "$RUNNER_TEMP/hold"
+          mv supabase/migrations/*.sql "$RUNNER_TEMP/hold/"
+          supabase start -x "$LOCAL_ONLY_SERVICES"
+          mv "$RUNNER_TEMP/hold/"*.sql supabase/migrations/
+      - name: Copy the live database to this runner (read-only)
+        run: |
+          supabase link --project-ref "$PROJECT_REF"
+          D="$RUNNER_TEMP/dump"; mkdir -p "$D"
+          PW=(); [ -n "$SUPABASE_DB_PASSWORD" ] && PW=(--password "$SUPABASE_DB_PASSWORD")
+          supabase migration list --remote --output-format json "${PW[@]}" > "$D/history.json"
+          supabase db dump --remote "${PW[@]}" --role-only -f "$D/roles.sql"
+          supabase db dump --remote "${PW[@]}" -f "$D/schema.sql"
+          supabase db dump --remote "${PW[@]}" --data-only --use-copy -f "$D/data.sql"
+          # Triggers on auth.users live outside the public schema dump; copy them too.
+          supabase db query --remote --read-only --output-format json \
+            "select coalesce(string_agg(pg_get_triggerdef(t.oid) || ';', E'\n'), '') as ddl from pg_trigger t where t.tgrelid = 'auth.users'::regclass and not t.tgisinternal" \
+            | jq -r '[.. | objects | select(has("ddl")) | .ddl] | first // empty' > "$D/auth_triggers.sql"
+          ls -la "$D"; cat "$D/auth_triggers.sql"
+      - name: Keep the live structure (no data) for 30 days
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-structure-before-${{ github.sha }}
+          path: ${{ runner.temp }}/dump/schema.sql
+          retention-days: 30
+      - name: Rehearse the deploy on the copy
+        run: .github/scripts/rehearse.sh "$RUNNER_TEMP/dump"
+      - name: Delete the copy
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/dump"; supabase stop --no-backup || true
+
+  deploy:
+    name: Deploy to the live project
+    needs: [test, build, setup-check, rehearse]
+    if: needs.setup-check.outputs.configured == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.mode == 'deploy')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The website must deploy together with the database
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN is not saved. Nothing was changed: the database and the website must be updated together."
+            exit 1
+          fi
+      - uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: dist
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Link the project
+        id: link
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref "$PROJECT_REF"
+
+      # ---- Preflight: nothing live changes if any of these fail ----
+      - name: Preflight - the Netlify token can reach the site
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npx --yes "$NETLIFY_CLI" api listSites --data "{\"name\": \"$NETLIFY_SITE\", \"filter\": \"all\"}" > sites.json
+          jq -e --arg n "$NETLIFY_SITE" '[.[] | select(.name == $n)] | length == 1' sites.json > /dev/null \
+            || { echo "::error::The Netlify token cannot see the site $NETLIFY_SITE. Nothing was changed."; exit 1; }
+          echo "ok: Netlify site found"
+      - name: Preflight - the owner email looks like an email
+        env:
+          OWNER_EMAIL: ${{ vars.OWNER_EMAIL }}
+        run: |
+          e=$(printf '%s' "$OWNER_EMAIL" | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+          [[ "$e" =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$ ]] \
+            || { echo "::error::The variable OWNER_EMAIL is not a valid email address. Nothing was changed."; exit 1; }
+          echo "ok: owner email is set"
+      - name: Preflight - email confirmation must be on
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          # The signup triggers trust a confirmed email (owner email, roster
+          # links). That is only safe while Supabase really confirms emails.
+          curl -fsS --retry 5 "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > auth.json
+          jq -e '.mailer_autoconfirm == false' auth.json > /dev/null \
+            || { echo "::error::Email confirmation is OFF (Authentication → Email → Confirm email). Turn it on first. Nothing was changed."; exit 1; }
+          echo "ok: email confirmation is on"
+
+      # ---- Additive steps: safe with the old website still live ----
+      - name: Put your Supabase address into the website's security rules
+        run: |
+          # netlify.toml ships with YOUR-PROJECT-REF in its
+          # Content-Security-Policy; the site may only talk to your project.
+          sed -i "s/YOUR-PROJECT-REF/$PROJECT_REF/g" netlify.toml
+          grep -q "https://$PROJECT_REF.supabase.co" netlify.toml \
+            || { echo "::error::netlify.toml does not allow https://$PROJECT_REF.supabase.co. Nothing was changed."; exit 1; }
+      - name: Upload the new website as a draft (not live yet)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npx --yes "$NETLIFY_CLI" deploy --dir dist --site "$NETLIFY_SITE" \
+            --message "Draft ${GITHUB_SHA::7}" --json > draft.json
+          jq '{deploy_url, deploy_id}' draft.json || cat draft.json
+
+      # ---- The switch ----
+      - name: Backup inside the database (a copy of every table)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase db query --remote --yes "
+            DO \$\$
+            DECLARE t text; s text := 'backup_' || to_char(now() at time zone 'utc', 'YYYYMMDD_HH24MISS');
+            BEGIN
+              EXECUTE format('CREATE SCHEMA %I', s);
+              FOR t IN SELECT table_name FROM information_schema.tables
+                       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+              LOOP
+                EXECUTE format('CREATE TABLE %I.%I AS TABLE public.%I', s, t, t);
+              END LOOP;
+              EXECUTE format('REVOKE ALL ON SCHEMA %I FROM PUBLIC, anon, authenticated', s);
+            END \$\$;"
+          supabase db query --remote --read-only \
+            "select nspname as backups from pg_namespace where nspname like 'backup_%' order by 1"
+      - name: Record row counts before
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase db query --remote --read-only --output-format json \
+            "select string_agg(table_name || '=' || (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', table_name), false, true, '')))[1]::text, E'\n' order by table_name) as counts from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'" \
+            | jq -r '[.. | objects | select(has("counts")) | .counts] | first // empty' > counts_before.txt
+          [ -s counts_before.txt ] || echo "no tables yet: this is the first deploy"
+          cat counts_before.txt
+      - name: Apply migrations
+        id: migrate
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db push --remote --yes ${SUPABASE_DB_PASSWORD:+--password "$SUPABASE_DB_PASSWORD"}
+      - name: Owner email (from the variable OWNER_EMAIL)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          OWNER_EMAIL: ${{ vars.OWNER_EMAIL }}
+        run: |
+          # Checked in the preflight: only letters, digits and . _ % + - @.
+          e=$(printf '%s' "$OWNER_EMAIL" | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+          [[ "$e" =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$ ]] || exit 1
+          supabase db query --remote --yes \
+            "update public.app_config set owner_email = '$e' where owner_email is distinct from '$e'" > /dev/null
+          echo "ok: owner email saved (it becomes the owner login once that email signs up and is confirmed)"
+      # After the migrations, never before: send-day-plan, run-automations
+      # and send-invoice use database functions and columns that the
+      # migrations add. If the migrations fail, the old functions stay.
+      - name: Booking, day-plan email and automatic email functions, secrets and deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          # Safety rule: nothing is sent from Gmail until you switch it on.
+          # The password is only handed on while the repository variable
+          # GMAIL_SENDING is "on" (Settings -> Secrets and variables -> Variables).
+          GMAIL_APP_PASSWORD: ${{ vars.GMAIL_SENDING == 'on' && secrets.GMAIL_APP_PASSWORD || '' }}
+          # Test mode (on by default): test emails only. Until the repository
+          # variable EMAIL_TEST_MODE is "off", the functions email only the
+          # business Gmail and the addresses in the variable
+          # EMAIL_TEST_RECIPIENTS (supabase/functions/_shared/testMode.ts).
+          EMAIL_TEST_MODE: ${{ vars.EMAIL_TEST_MODE == 'off' && 'off' || 'on' }}
+          EMAIL_TEST_RECIPIENTS: ${{ vars.EMAIL_TEST_RECIPIENTS }}
+          GMAIL_ADDRESS: ${{ vars.GMAIL_ADDRESS }}
+          SENDER_NAME: ${{ vars.BUSINESS_NAME }}
+        run: |
+          args=(ALLOWED_ORIGIN="$SITE_URL" EMAIL_TEST_MODE="$EMAIL_TEST_MODE" EMAIL_TEST_RECIPIENTS="${EMAIL_TEST_RECIPIENTS:-none}"
+                GMAIL_ADDRESS="${GMAIL_ADDRESS:-none}" SENDER_NAME="${SENDER_NAME:-Tree Service}")
+          echo "Email test mode: $EMAIL_TEST_MODE (test addresses: $(echo "$EMAIL_TEST_RECIPIENTS" | tr ',' '\n' | grep -c @ || true))"
+          [ -n "$TURNSTILE_SECRET_KEY" ] && args+=(TURNSTILE_SECRET_KEY="$TURNSTILE_SECRET_KEY")
+          # send-day-plan sends nothing until the Gmail app password is saved.
+          [ -n "$GMAIL_APP_PASSWORD" ] && args+=(GMAIL_APP_PASSWORD="$GMAIL_APP_PASSWORD")
+          supabase secrets set --remote="$PROJECT_REF" --yes "${args[@]}"
+          if [ -z "$GMAIL_APP_PASSWORD" ]; then
+            # Gmail sending is off: no function may hold the password. The
+            # last step of this job checks that it is really gone.
+            supabase secrets unset --remote="$PROJECT_REF" --yes GMAIL_APP_PASSWORD >/dev/null 2>&1 || true
+            echo "Gmail sending is off: GMAIL_APP_PASSWORD removal asked for (checked at the end of this job)."
+          fi
+          supabase functions deploy book-estimate --remote="$PROJECT_REF" --use-api --yes
+          supabase functions deploy send-day-plan --remote="$PROJECT_REF" --use-api --yes
+          # Sends nothing until the owner turns on "Automatic customer emails" in the app.
+          supabase functions deploy run-automations --remote="$PROJECT_REF" --use-api --yes
+          # "Email estimate" (office only) and the public accept page; both send nothing until Gmail is set up.
+          supabase functions deploy send-estimate --remote="$PROJECT_REF" --use-api --yes
+          supabase functions deploy estimate-accept --remote="$PROJECT_REF" --use-api --yes
+          # "Email invoice" (office only, one email per press); sends nothing until Gmail is set up.
+          supabase functions deploy send-invoice --remote="$PROJECT_REF" --use-api --yes
+          # Suggested customer change -> one email to the business Gmail; sends nothing until Gmail is set up.
+          supabase functions deploy notify-suggestion --remote="$PROJECT_REF" --use-api --yes
+      - name: Publish the new website (right after the database and functions update)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          for attempt in 1 2 3; do
+            if npx --yes "$NETLIFY_CLI" deploy --prod --dir dist --site "$NETLIFY_SITE" \
+                 --message "Deploy ${GITHUB_SHA::7} from GitHub Actions"; then
+              exit 0
+            fi
+            echo "publish attempt $attempt failed; retrying"; sleep 10
+          done
+          echo "::error::THE DATABASE IS UPDATED BUT THE NEW WEBSITE IS NOT LIVE. Re-run this workflow (mode: deploy) right away."
+          exit 1
+
+      # ---- Account settings (safe to re-apply on every deploy) ----
+      - name: Login emails through Gmail, and password rules
+        # The website and database are live by now: a failure here must not
+        # skip the checks below. An "off" that did not stick still turns the
+        # run red in the last step ("Check the email switches stuck").
+        continue-on-error: true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # Safety rule: nothing is sent from Gmail until you switch it on.
+          # The password is only handed on while the repository variable
+          # GMAIL_SENDING is "on" (Settings -> Secrets and variables -> Variables).
+          # Login emails (sign-up, password reset) go through Gmail only once
+          # test mode is off: they can be addressed to anyone, so during
+          # testing they stay on Supabase's built-in sender, which only
+          # mails the project's own team.
+          LOGIN_GMAIL_PASSWORD: ${{ vars.GMAIL_SENDING == 'on' && vars.EMAIL_TEST_MODE == 'off' && secrets.GMAIL_APP_PASSWORD || '' }}
+          GMAIL_ADDRESS: ${{ vars.GMAIL_ADDRESS }}
+          SENDER_NAME: ${{ vars.BUSINESS_NAME }}
+        run: bash .github/scripts/email-settings.sh login
+      - name: Two-step login with authenticator apps stays available
+        continue-on-error: true
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          # Optional two-step login uses authenticator-app codes (TOTP),
+          # which every Supabase plan includes. Switch them on only if off.
+          curl -fsS --retry 5 "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > mfa.json
+          jq '{mfa_totp_enroll_enabled, mfa_totp_verify_enabled}' mfa.json
+          if jq -e '.mfa_totp_enroll_enabled == false or .mfa_totp_verify_enabled == false' mfa.json > /dev/null; then
+            curl -fsS --retry 5 -X PATCH "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" \
+              -d '{"mfa_totp_enroll_enabled": true, "mfa_totp_verify_enabled": true}' \
+              | jq '{mfa_totp_enroll_enabled, mfa_totp_verify_enabled}'
+          fi
+
+      # ---- Verify ----
+      - name: Verify the live project after the deploy
+        if: always() && steps.migrate.outcome == 'success'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          fail=0
+          supabase db query --remote --read-only --output-format json \
+            "select string_agg(table_name || '=' || (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', table_name), false, true, '')))[1]::text, E'\n' order by table_name) as counts from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'" \
+            | jq -r '[.. | objects | select(has("counts")) | .counts] | first // empty' > counts_after.txt
+          # The app may be in use, so small changes are normal. A table that is
+          # gone, emptied, or lost more than 5% of its rows is an error.
+          while IFS='=' read -r table before; do
+            after=$(grep "^${table}=" counts_after.txt | cut -d= -f2 || true)
+            if [ -z "$after" ]; then echo "::error::table $table is gone"; fail=1; continue; fi
+            if [ "$before" -gt 0 ] && [ "$after" -eq 0 ]; then echo "::error::table $table was emptied ($before -> 0)"; fail=1; continue; fi
+            if [ "$after" -lt "$before" ]; then
+              if [ $((after * 100)) -lt $((before * 95)) ]; then echo "::error::table $table lost rows ($before -> $after)"; fail=1;
+              else echo "::warning::table $table: $before -> $after"; fi
+            fi
+          done < counts_before.txt
+          [ "$fail" = 0 ] && echo "ok: every table kept its rows"
+          supabase db query --remote --read-only \
+            --output-format json -f .github/diagnostics/structure_fingerprint.sql \
+            | jq -r '[.. | objects | select(has("fingerprint")) | .fingerprint] | first // empty' > live.txt
+          diff live.txt .github/diagnostics/expected_after_deploy.txt | grep -E '^[<>]' \
+            > drift.txt || true
+          if [ -s drift.txt ]; then echo "::error::unexpected structure differences:"; cat drift.txt; fail=1; else echo "ok: structure matches"; fi
+          # The live page must carry this build's title (from index.html).
+          expected_title=$(grep -oE '<title>[^<]*</title>' index.html)
+          for i in 1 2 3 4 5 6; do
+            title=$(curl -fsSL "$SITE_URL/" | grep -oE '<title>[^<]*</title>' || true)
+            echo "website title: $title"
+            [ "$title" = "$expected_title" ] && break
+            sleep 5
+          done
+          [ -n "$expected_title" ] && [ "$title" = "$expected_title" ] || { echo "::error::the live website is not the new build"; fail=1; }
+          # The security headers from netlify.toml travel with each upload.
+          names=$(curl -fsSI --retry 3 "$SITE_URL/" | tr -d '\r' | cut -d: -f1 | tr 'A-Z' 'a-z' || true)
+          for h in content-security-policy strict-transport-security x-content-type-options x-frame-options referrer-policy permissions-policy; do
+            if grep -qx "$h" <<<"$names"; then echo "ok: header $h"; else echo "::error::the website does not send the $h header"; fail=1; fi
+          done
+          exit $fail
+
+      - name: Check the access rules on the live project
+        if: success()
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          # The access-rule helpers must be able to read authenticator-app
+          # factors, and the reset must be able to delete factors and
+          # sessions (they all run as their owner).
+          supabase db query --remote --read-only --output-format json \
+            "select count(*) = 10 and bool_and(r.rolbypassrls and has_table_privilege(p.proowner, 'auth.mfa_factors', 'SELECT')
+               and (p.proname <> 'reset_two_step_login' or (has_table_privilege(p.proowner, 'auth.mfa_factors', 'DELETE') and has_table_privilege(p.proowner, 'auth.sessions', 'DELETE')))) as ok
+             from pg_proc p join pg_roles r on r.oid = p.proowner
+             where p.pronamespace = 'public'::regnamespace and p.proname in ('mfa_satisfied', 'reset_two_step_login',
+               'is_company_member', 'is_company_staff', 'is_company_admin', 'is_company_owner', 'current_member_role',
+               'current_crew_id', 'current_crew_name', 'crew_perm')" > mfa_check.json
+          jq -e '[.. | objects | select(has("ok")) | .ok] | first == true' mfa_check.json > /dev/null \
+            || { echo "::error::the two-step login functions cannot read factors or reset them on the live project"; exit 1; }
+          echo "ok: two-step login functions can read factors and reset them"
+          # An owner's login must see every customer through the access
+          # rules. Simulated inside one statement as that login (with a
+          # two-step code); it only reads, and fails loudly otherwise.
+          supabase db query --remote --yes "
+            DO \$\$
+            DECLARE owner_id uuid; total int; seen int;
+            BEGIN
+              SELECT m.user_id INTO owner_id FROM public.company_members m
+                JOIN public.app_config a ON a.company_id = m.company_id
+                WHERE m.role = 'owner' ORDER BY m.user_id LIMIT 1;
+              SELECT count(*) INTO total FROM public.customers c
+                JOIN public.app_config a ON a.company_id = c.company_id;
+              PERFORM set_config('request.jwt.claims', json_build_object(
+                'sub', owner_id, 'role', 'authenticated', 'aal', 'aal2')::text, true);
+              EXECUTE 'SET LOCAL ROLE authenticated';
+              SELECT count(*) INTO seen FROM public.customers;
+              EXECUTE 'RESET ROLE';
+              IF owner_id IS NULL THEN
+                RAISE NOTICE 'no owner login yet (first deploy): nothing to compare';
+              ELSIF seen <> total THEN
+                RAISE EXCEPTION 'an owner login sees % of % customers', seen, total;
+              END IF;
+            END \$\$;"
+          echo "ok: an owner's login sees every customer through the access rules"
+
+      # ---- Housekeeping (only after a verified deploy) ----
+      - name: Keep only the newest 5 in-database backups
+        if: success()
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          # Every deploy copies all tables into a backup_<date> schema. The
+          # free plan's database is limited to 500 MB (over it, the database
+          # turns read-only), so only the newest 5 copies stay.
+          supabase db query --remote --yes "
+            DO \$\$
+            DECLARE s text;
+            BEGIN
+              FOR s IN
+                SELECT nspname FROM pg_namespace
+                WHERE nspname ~ '^backup_[0-9]{8}_[0-9]{6}\$'
+                ORDER BY nspname DESC
+                OFFSET 5
+              LOOP
+                EXECUTE format('DROP SCHEMA %I CASCADE', s);
+              END LOOP;
+            END \$\$;"
+          supabase db query --remote --read-only \
+            "select n.nspname as backup_kept, pg_size_pretty(sum(pg_total_relation_size(c.oid))) as size
+             from pg_namespace n join pg_class c on c.relnamespace = n.oid
+             where n.nspname like 'backup\_%' and c.relkind = 'r'
+             group by n.nspname order by n.nspname"
+          supabase db query --remote --read-only \
+            "select pg_size_pretty(pg_database_size(current_database())) as database_size, '500 MB' as free_plan_limit"
+
+      # ---- Email switches: an "off" must really be off ----
+      - name: Check the email switches stuck
+        if: always() && steps.link.outcome == 'success'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FUNCTIONS_GMAIL: ${{ vars.GMAIL_SENDING == 'on' && secrets.GMAIL_APP_PASSWORD != '' && 'on' || 'off' }}
+          LOGIN_GMAIL: ${{ vars.GMAIL_SENDING == 'on' && vars.EMAIL_TEST_MODE == 'off' && secrets.GMAIL_APP_PASSWORD != '' && 'on' || 'off' }}
+        run: bash .github/scripts/email-settings.sh verify

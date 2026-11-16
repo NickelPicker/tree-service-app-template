@@ -1,0 +1,25 @@
+# Weekly pull requests for package and GitHub Actions updates. Each one
+# runs the Checks workflow; merging it deploys like any other change, so
+# updates are grouped to keep the number of deploys small.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Type definitions follow the Node version CI runs (22), not the newest Node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      # The artifact upload and download actions must move together.
+      github-actions:
+        patterns: ["*"]

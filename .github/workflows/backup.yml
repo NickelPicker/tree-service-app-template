@@ -1,0 +1,138 @@
+# Daily encrypted backup of the live database (logins, structure and all
+# data), kept for 30 days as a workflow artifact.
+#
+# - Runs every day at 09:17 UTC (night time in North America; change the
+#   cron line below to suit your time zone), and by hand: Actions → Daily backup → Run workflow.
+# - Only reads the live database. The file is encrypted (AES-256) with the
+#   BACKUP_PASSPHRASE secret before it leaves the runner; nothing
+#   unencrypted is ever uploaded. Without the secret it does nothing.
+# - The log shows sizes, table names and row counts only, never any data.
+# - How to restore: README.md, "Backups and how to restore one".
+#
+# One-time setup (repo → Settings → Secrets and variables → Actions → Secrets):
+#   BACKUP_PASSPHRASE       required: a long passphrase. Keep a copy somewhere
+#                           safe outside GitHub (a password manager): GitHub
+#                           never shows it again, and without it the backups
+#                           cannot be opened.
+#   SUPABASE_ACCESS_TOKEN   already set for the deploy.
+#   SUPABASE_DB_PASSWORD    already set for the deploy.
+name: Daily backup
+
+on:
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+# Never two backups at once.
+concurrency:
+  group: daily-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
+env:
+  PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+  SUPABASE_CLI: 3.1.0
+
+jobs:
+  setup-check:
+    name: Check backup settings
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          HAS_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+          HAS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && vars.SUPABASE_PROJECT_REF != '' }}
+        run: |
+          if [ "$HAS_PASSPHRASE" != "true" ]; then
+            echo "::notice::Daily backup is off: add the BACKUP_PASSPHRASE secret (Settings → Secrets and variables → Actions)"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice::Daily backup is off: SUPABASE_ACCESS_TOKEN or the variable SUPABASE_PROJECT_REF is not saved yet (README.md, Set up GitHub)."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The deploy and the backup both sign in to the live project with the
+  # Supabase CLI's temporary login, and each sign-in resets its password:
+  # running side by side, they would break each other (the deploy could
+  # stop half way). So the backup waits until no deploy is running or
+  # queued, and then takes the deploy's own lock (`deploy-live`, below):
+  # a deploy that starts later waits for the backup to finish.
+  # The wait comes first because GitHub keeps only one run waiting per
+  # lock: joining it while a deploy was already waiting would cancel that
+  # deploy.
+  wait-for-deploy:
+    name: Wait until no deploy is running
+    needs: [setup-check]
+    if: needs.setup-check.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    permissions:
+      actions: read
+    steps:
+      - name: Wait (up to 90 minutes)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 180); do
+            busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs?per_page=30" \
+              --jq '[.workflow_runs[] | select(.status != "completed")] | length')
+            if [ "$busy" = "0" ]; then
+              echo "No deploy running or queued."
+              exit 0
+            fi
+            [ "$i" = 1 ] && echo "A deploy is running or queued; waiting for it to finish..."
+            sleep 30
+          done
+          echo "::error::No backup today: a deploy has been running or queued for over 90 minutes. Run this workflow again by hand once it is done."
+          exit 1
+
+  backup:
+    name: Back up the live database (read-only, encrypted)
+    needs: [wait-for-deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The deploy's lock (see above). Never cancels a running deploy.
+    concurrency:
+      group: deploy-live
+      cancel-in-progress: false
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI }}
+      - name: Link the project
+        run: supabase link --project-ref "$PROJECT_REF"
+      - name: Name the file by date
+        id: name
+        run: echo "name=database-backup-$(date -u +%Y-%m-%d_%H%M)" >> "$GITHUB_OUTPUT"
+      - name: Dump, encrypt, check it opens (sizes, table names and row counts only)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_TARGET: remote
+        run: .github/scripts/backup.sh "$RUNNER_TEMP/out/${{ steps.name.outputs.name }}.tar.gz.gpg"
+      - name: Keep the encrypted file for 30 days
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.name.outputs.name }}
+          path: ${{ runner.temp }}/out/${{ steps.name.outputs.name }}.tar.gz.gpg
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - name: Delete the files from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/out" "$RUNNER_TEMP"/backup.*

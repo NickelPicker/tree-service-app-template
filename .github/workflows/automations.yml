@@ -1,0 +1,95 @@
+# Automatic customer emails: runs the run-automations edge function
+# once an hour. The function itself decides whether anything goes out:
+# nothing is sent unless the owner turned on "Automatic customer emails"
+# on the Automations page, the Gmail app password is saved, and it is
+# 8:00 to 17:59 in the business time zone (BUSINESS_TIME_ZONE). Safe to run any time: the sends log means an
+# email is never sent twice.
+#
+# No extra setup: it uses the SUPABASE_ACCESS_TOKEN secret the deploy
+# already has, to fetch the project's service role key from the
+# Supabase Management API for this run only. The key is masked in the
+# log and never stored. Only counts are printed (no names or emails).
+name: Automatic customer emails
+
+on:
+  schedule:
+    # Every hour at :17 (UTC). The function skips night hours itself.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: automations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash -eo pipefail {0}
+
+env:
+  PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+
+jobs:
+  run:
+    name: Run the automations
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call run-automations (counts only)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$PROJECT_REF" ]; then
+            echo "::notice::Skipped: SUPABASE_ACCESS_TOKEN or the variable SUPABASE_PROJECT_REF is not saved yet."
+            exit 0
+          fi
+          umask 077
+          curl -fsS --retry 5 \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/api-keys?reveal=true" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$RUNNER_TEMP/keys.json"
+          key=$(jq -r '[.[] | select(.name == "service_role") | .api_key | select(. != null and . != "")][0] // empty' "$RUNNER_TEMP/keys.json")
+          rm -f "$RUNNER_TEMP/keys.json"
+          if [ -z "$key" ]; then
+            echo "::error::Could not get the project's service role key from the Supabase API."
+            exit 1
+          fi
+          echo "::add-mask::$key"
+
+          code=$(curl -sS -o "$RUNNER_TEMP/out.json" -w '%{http_code}' --max-time 300 \
+            -X POST "https://$PROJECT_REF.supabase.co/functions/v1/run-automations" \
+            -H "Authorization: Bearer $key" -H "apikey: $key" \
+            -H "Content-Type: application/json" -d '{}') || code=000
+          unset key
+          if [ "$code" = "404" ]; then
+            echo "::notice::run-automations is not deployed yet (it is deployed by the next merge to main)."
+            exit 0
+          fi
+          if [ "$code" != "200" ]; then
+            echo "::error::run-automations answered HTTP $code."
+            exit 1
+          fi
+          # Counts and outcomes only.
+          jq '{companies, sent, failed, skipped, waiting, blocked, outcomes, clocksClosed, clockCloseFailed}' "$RUNNER_TEMP/out.json"
+          # Test mode: emails to other addresses are held back, not failed
+          # (no try used; they go once test mode is off).
+          blocked=$(jq -r '.blocked // 0' "$RUNNER_TEMP/out.json")
+          if [ "$blocked" != "0" ]; then
+            echo "::notice::Test mode held back $blocked customer emails (only test addresses get emails). They go once test mode is off."
+          fi
+          # Red when something went wrong, so it shows up in GitHub's
+          # email: the 8 PM clock close failing, a run error, Gmail refusing the account, or emails
+          # that failed with none getting through.
+          problem=$(jq -r '
+            if (.clockCloseFailed // false) then "the 8 PM clock close failed (open clock entries were not closed)"
+            elif ((.outcomes // []) | index("error")) != null then "a company run stopped with an error"
+            elif ((.outcomes // []) | index("gmail-refused")) != null then "Gmail refused the account (app password, connection or daily limit)"
+            elif ((.failed // 0) > 0 and (.sent // 0) == 0) then "\(.failed) emails failed and none were sent"
+            else "" end' "$RUNNER_TEMP/out.json")
+          rm -f "$RUNNER_TEMP/out.json"
+          if [ -n "$problem" ]; then
+            echo "::error::run-automations: $problem. It tries again next hour."
+            exit 1
+          fi
